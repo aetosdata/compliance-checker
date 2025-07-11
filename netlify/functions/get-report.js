@@ -8,6 +8,11 @@ exports.handler = async (event) => {
 
     try {
         const userAnswers = JSON.parse(event.body);
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+            throw new Error("API key is not configured.");
+        }
 
         // --- Start Building the Prompt ---
         let mandatoryRegulations = [];
@@ -77,7 +82,6 @@ exports.handler = async (event) => {
 
         let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
         const payload = { contents: chatHistory };
-        const apiKey = ""; // This will be handled by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(apiUrl, {
