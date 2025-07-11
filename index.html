@@ -43,7 +43,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Custom focus styles for accent color */
         .form-input:focus, .form-select:focus {
             border-color: #447073;
             box-shadow: 0 0 0 2px rgba(68, 112, 115, 0.5);
@@ -57,10 +56,9 @@
             --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
             box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
         }
-        /* Custom error message styling */
         .error-message {
             display: none;
-            color: #dc2626; /* red-600 */
+            color: #dc2626;
             font-size: 0.875rem;
             margin-top: 0.5rem;
         }
@@ -70,21 +68,16 @@
 
     <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
         
-        <!-- Header -->
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Compliance Check-up</h1>
             <p class="mt-2 text-lg text-gray-600">Answer a few questions to get a high-level overview of your potential compliance needs.</p>
             <div class="mt-1 text-sm text-gray-500">Powered by Aetos Data Consulting</div>
         </header>
 
-        <!-- Step Indicator -->
-        <div id="step-indicator" class="flex items-center justify-center mb-8 sm:mb-12">
-            <!-- Steps will be dynamically generated here -->
-        </div>
+        <div id="step-indicator" class="flex items-center justify-center mb-8 sm:mb-12"></div>
 
         <main id="app-content" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
 
-            <!-- Welcome Screen (Step 0) -->
             <div id="step-0" class="text-center fade-in">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Is Your Business Compliant?</h2>
                 <p class="text-gray-600 mb-6">Let's be honest: terms like 'GDPR' and 'CCPA' are enough to make any business owner's head spin. You know data compliance is important, but figuring out what actually applies to <em>you</em> can feel like trying to solve a riddle in the dark.</p>
@@ -95,12 +88,8 @@
                 <p class="text-xs text-gray-400 mt-4">Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.</p>
             </div>
 
-            <!-- Questions Container -->
-            <div id="questions-container" class="hidden">
-                <!-- Questions will be injected here -->
-            </div>
+            <div id="questions-container" class="hidden"></div>
 
-            <!-- Loading Screen -->
             <div id="loading-screen" class="hidden text-center fade-in">
                 <div class="flex justify-center items-center mb-4">
                     <svg class="animate-spin -ml-1 mr-3 h-8 w-8" style="color: #447073;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -112,12 +101,9 @@
                 <p class="text-gray-600">Our AI is generating your personalized compliance snapshot. This may take a moment.</p>
             </div>
 
-            <!-- Results Screen -->
             <div id="results-screen" class="hidden fade-in">
                 <h2 class="text-3xl font-bold text-gray-900 mb-4 border-b pb-3">Your Compliance Snapshot</h2>
-                <div id="results-content" class="prose prose-lg max-w-none text-gray-700">
-                    <!-- AI-generated results will be displayed here -->
-                </div>
+                <div id="results-content" class="prose prose-lg max-w-none text-gray-700"></div>
                 <div class="mt-8 p-6 rounded-xl text-center" style="background-color: #f0f4f4; border: 2px solid #a2b7b8;">
                     <h3 class="text-xl font-bold text-gray-800">Ready to Take the Next Step?</h3>
                     <p class="mt-2 text-gray-600">This report is a starting point. Aetos Data Consulting can provide an in-depth assessment and help you build a compliance program tailored to your specific needs.</p>
@@ -132,95 +118,27 @@
 
         </main>
 
-        <!-- Navigation Buttons -->
         <div id="nav-buttons" class="flex justify-between mt-8 hidden">
-            <button id="prev-btn" onclick="prevStep()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition-colors duration-300">
-                Back
-            </button>
-            <button id="next-btn" onclick="nextStep()" class="text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
-                Next
-            </button>
-            <button id="submit-btn" onclick="getReport()" class="hidden text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
-                Get My Report
-            </button>
+            <button id="prev-btn" onclick="prevStep()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition-colors duration-300">Back</button>
+            <button id="next-btn" onclick="nextStep()" class="text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Next</button>
+            <button id="submit-btn" onclick="getReport()" class="hidden text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Get My Report</button>
         </div>
         <div id="error-message-container" class="text-center"></div>
 
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const questions = [
-            {
-                id: 'industry',
-                title: 'About Your Business',
-                prompt: 'What industry does your business operate in?',
-                type: 'select',
-                options: ['Technology/SaaS', 'Healthcare', 'E-commerce/Retail', 'Financial Services', 'Marketing/Advertising', 'Education', 'Other']
-            },
-            {
-                id: 'company_size',
-                title: 'Business Scale',
-                prompt: 'What is the approximate size of your company?',
-                type: 'select',
-                options: ['1-10 employees', '11-50 employees', '51-250 employees', '251-1000 employees', '1000+ employees']
-            },
-            {
-                id: 'annual_revenue',
-                title: 'Financial Scale',
-                prompt: 'What is your approximate annual revenue?',
-                explanation: 'This helps determine the potential scale of compliance penalties and how attractive a target your business might be for regulators.',
-                type: 'select',
-                options: ['$0 - $249,999', '$250,000 - $499,999', '$500,000 - $749,999', '$750,000 - $999,999', '$1M+']
-            },
-            {
-                id: 'customer_locations',
-                title: 'Customer Base',
-                prompt: 'Where are your customers located? (Select all that apply)',
-                type: 'checkbox',
-                options: ['United States (General)', 'California (USA)', 'European Union (EU)', 'United Kingdom (UK)', 'Canada', 'Other/Global']
-            },
-            {
-                id: 'customer_type',
-                title: 'Customer Type',
-                prompt: 'Who are your customers?',
-                type: 'radio',
-                options: ['Businesses', 'Consumers', 'Both']
-            },
-            {
-                id: 'data_types',
-                title: 'Data Collection',
-                prompt: 'What types of personal data do you collect or process? (Select all that apply)',
-                type: 'checkbox',
-                options: [
-                    'Basic contact info',
-                    'Other identifying information (SSN, IP address)',
-                    'Health or medical information (PHI)',
-                    'Genetics',
-                    'Financial information (credit card numbers, bank accounts)',
-                    'Biometrics',
-                    'Data on individuals under 16 years old',
-                    'Racial or ethnic origin',
-                    'Political opinions',
-                    'Religious or philosophical beliefs',
-                    'Trade union membership',
-                    'Sex life or orientation'
-                ]
-            },
-            {
-                id: 'contact_info',
-                title: 'Your Report',
-                prompt: 'Where should we send your report?',
-                explanation: 'Enter your details below to receive your personalized compliance snapshot.',
-                type: 'contact'
-            }
+            { id: 'industry', title: 'About Your Business', prompt: 'What industry does your business operate in?', type: 'select', options: ['Technology/SaaS', 'Healthcare', 'E-commerce/Retail', 'Financial Services', 'Marketing/Advertising', 'Education', 'Other'] },
+            { id: 'company_size', title: 'Business Scale', prompt: 'What is the approximate size of your company?', type: 'select', options: ['1-10 employees', '11-50 employees', '51-250 employees', '251-1000 employees', '1000+ employees'] },
+            { id: 'annual_revenue', title: 'Financial Scale', prompt: 'What is your approximate annual revenue?', explanation: 'This helps determine the potential scale of compliance penalties.', type: 'select', options: ['$0 - $249,999', '$250,000 - $499,999', '$500,000 - $749,999', '$750,000 - $999,999', '$1M+'] },
+            { id: 'customer_locations', title: 'Customer Base', prompt: 'Where are your customers located? (Select all that apply)', type: 'checkbox', options: ['United States (General)', 'California (USA)', 'European Union (EU)', 'United Kingdom (UK)', 'Canada', 'Other/Global'] },
+            { id: 'customer_type', title: 'Customer Type', prompt: 'Who are your customers?', type: 'radio', options: ['Businesses', 'Consumers', 'Both'] },
+            { id: 'data_types', title: 'Data Collection', prompt: 'What types of personal data do you collect or process? (Select all that apply)', type: 'checkbox', options: [ 'Basic contact info', 'Other identifying information (SSN, IP address)', 'Health or medical information (PHI)', 'Genetics', 'Financial information (credit card numbers, bank accounts)', 'Biometrics', 'Data on individuals under 16 years old', 'Racial or ethnic origin', 'Political opinions', 'Religious or philosophical beliefs', 'Trade union membership', 'Sex life or orientation' ] },
+            { id: 'contact_info', title: 'Your Report', prompt: 'Where should we send your report?', explanation: 'Enter your details below to receive your personalized compliance snapshot.', type: 'contact' }
         ];
-
-        // --- STATE MANAGEMENT ---
         let currentStep = 0;
         const userAnswers = {};
-
-        // --- DOM ELEMENTS ---
         const stepIndicator = document.getElementById('step-indicator');
         const appContent = document.getElementById('app-content');
         const welcomeScreen = document.getElementById('step-0');
@@ -233,128 +151,62 @@
         const submitBtn = document.getElementById('submit-btn');
         const errorMessageContainer = document.getElementById('error-message-container');
 
-
-        // --- FUNCTIONS ---
-
-        /**
-         * Initializes the application, building the question and step indicator UI.
-         */
         function initialize() {
-            // Build step indicators
             let indicatorHTML = '';
             questions.forEach((q, index) => {
-                indicatorHTML += `
-                    ${index > 0 ? '<div class="flex-auto border-t-2 step-inactive mx-4"></div>' : ''}
-                    <div id="indicator-${index + 1}" class="step-indicator-item flex items-center step-inactive">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-bold">
-                            ${index + 1}
-                        </div>
-                        <span class="hidden md:block ml-3 font-semibold">${q.title}</span>
-                    </div>
-                `;
+                indicatorHTML += `${index > 0 ? '<div class="flex-auto border-t-2 step-inactive mx-4"></div>' : ''}<div id="indicator-${index + 1}" class="step-indicator-item flex items-center step-inactive"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-bold">${index + 1}</div><span class="hidden md:block ml-3 font-semibold">${q.title}</span></div>`;
             });
             stepIndicator.innerHTML = indicatorHTML;
             
-            // Build question slides
             let questionsHTML = '';
             questions.forEach((q, index) => {
-                questionsHTML += `<div id="step-${index + 1}" class="hidden fade-in" data-step="${index + 1}">`;
-                questionsHTML += `<h3 class="text-xl font-semibold text-gray-800 mb-2">${q.prompt}</h3>`;
-                if(q.explanation) {
-                    questionsHTML += `<p class="text-gray-500 mb-6">${q.explanation}</p>`;
-                } else {
-                    questionsHTML += `<div class="mb-6"></div>`; // Keep spacing consistent
-                }
+                questionsHTML += `<div id="step-${index + 1}" class="hidden fade-in" data-step="${index + 1}"><h3 class="text-xl font-semibold text-gray-800 mb-2">${q.prompt}</h3>`;
+                if(q.explanation) questionsHTML += `<p class="text-gray-500 mb-6">${q.explanation}</p>`;
+                else questionsHTML += `<div class="mb-6"></div>`;
                 questionsHTML += `<div class="space-y-4">`;
                 if (q.type === 'select') {
-                    questionsHTML += `<select id="${q.id}" class="w-full p-3 border border-gray-300 rounded-lg appearance-none form-select">`;
-                    questionsHTML += `<option value="" disabled selected>Please select an option...</option>`;
-                    q.options.forEach(opt => {
-                        questionsHTML += `<option value="${opt}">${opt}</option>`;
-                    });
+                    questionsHTML += `<select id="${q.id}" class="w-full p-3 border border-gray-300 rounded-lg appearance-none form-select"><option value="" disabled selected>Please select an option...</option>`;
+                    q.options.forEach(opt => { questionsHTML += `<option value="${opt}">${opt}</option>`; });
                     questionsHTML += `</select>`;
                 } else if (q.type === 'checkbox') {
-                    q.options.forEach((opt, i) => {
-                        questionsHTML += `
-                            <label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                <input type="checkbox" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 rounded border-gray-300">
-                                <span class="ml-3 text-gray-700">${opt}</span>
-                            </label>
-                        `;
-                    });
+                    q.options.forEach((opt, i) => { questionsHTML += `<label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 rounded border-gray-300"><span class="ml-3 text-gray-700">${opt}</span></label>`; });
                 } else if (q.type === 'radio') {
-                    q.options.forEach((opt, i) => {
-                        questionsHTML += `
-                            <label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                <input type="radio" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 border-gray-300">
-                                <span class="ml-3 text-gray-700">${opt}</span>
-                            </label>
-                        `;
-                    });
+                    q.options.forEach((opt, i) => { questionsHTML += `<label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="radio" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 border-gray-300"><span class="ml-3 text-gray-700">${opt}</span></label>`; });
                 } else if (q.type === 'contact') {
-                    questionsHTML += `
-                        <div>
-                            <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                            <input type="text" id="full_name" name="full_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input">
-                        </div>
-                        <div>
-                            <label for="company_name" class="block text-sm font-medium text-gray-700">Company Name</label>
-                            <input type="text" id="company_name" name="company_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input">
-                        </div>
-                        <div>
-                            <label for="work_email" class="block text-sm font-medium text-gray-700">Work Email</label>
-                            <input type="email" id="work_email" name="work_email" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input">
-                        </div>
-                    `;
+                    questionsHTML += `<div><label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label><input type="text" id="full_name" name="full_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div><div><label for="company_name" class="block text-sm font-medium text-gray-700">Company Name</label><input type="text" id="company_name" name="company_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div><div><label for="work_email" class="block text-sm font-medium text-gray-700">Work Email</label><input type="email" id="work_email" name="work_email" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div>`;
                 }
                 questionsHTML += `</div></div>`;
             });
             questionsContainer.innerHTML = questionsHTML;
-            
             updateUI();
         }
 
-        /**
-         * Updates the entire UI based on the current step.
-         */
         function updateUI() {
-            if (currentStep > 0) {
-                questionsContainer.classList.remove('hidden');
-            } else {
-                questionsContainer.classList.add('hidden');
-            }
-
+            if (currentStep > 0) questionsContainer.classList.remove('hidden');
+            else questionsContainer.classList.add('hidden');
             for (let i = 0; i <= questions.length; i++) {
                 const stepEl = document.getElementById(`step-${i}`);
                 if (stepEl) stepEl.classList.add('hidden');
             }
-            
             const currentStepEl = document.getElementById(`step-${currentStep}`);
             if (currentStepEl) currentStepEl.classList.remove('hidden');
-
-            if (currentStep === 0) {
-                navButtons.classList.add('hidden');
-            } else {
+            if (currentStep === 0) navButtons.classList.add('hidden');
+            else {
                 navButtons.classList.remove('hidden');
                 prevBtn.style.visibility = currentStep > 1 ? 'visible' : 'hidden';
                 nextBtn.style.display = currentStep < questions.length ? 'block' : 'none';
                 submitBtn.style.display = currentStep === questions.length ? 'block' : 'none';
             }
-            
             for (let i = 1; i <= questions.length; i++) {
                 const indicator = document.getElementById(`indicator-${i}`);
                 if (!indicator) continue;
                 const indicatorCircle = indicator.querySelector('div');
                 const indicatorLine = indicator.previousElementSibling;
-
                 indicatorCircle.classList.remove('step-active', 'step-complete', 'step-inactive');
-                if (indicatorLine && indicatorLine.classList.contains('border-t-2')) {
-                    indicatorLine.classList.remove('step-active', 'step-complete', 'step-inactive');
-                }
-
+                if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.remove('step-active', 'step-complete', 'step-inactive');
                 if (i < currentStep) {
                     indicatorCircle.classList.add('step-complete');
-                    indicatorCircle.innerHTML = '&#10003;'; // Checkmark
+                    indicatorCircle.innerHTML = '&#10003;';
                     if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-complete');
                 } else if (i === currentStep) {
                     indicatorCircle.classList.add('step-active');
@@ -368,22 +220,14 @@
             }
         }
 
-        /**
-         * Saves the answer(s) for the current step.
-         */
         function saveAnswer() {
             if (currentStep > 0 && currentStep <= questions.length) {
                 const question = questions[currentStep - 1];
-                if (question.type === 'select') {
-                    userAnswers[question.id] = document.getElementById(question.id).value;
-                } else if (question.type === 'checkbox') {
-                    const checked = Array.from(document.querySelectorAll(`input[name=${question.id}]:checked`)).map(el => el.value);
-                    userAnswers[question.id] = checked;
-                } else if (question.type === 'radio') {
+                if (question.type === 'select') userAnswers[question.id] = document.getElementById(question.id).value;
+                else if (question.type === 'checkbox') userAnswers[question.id] = Array.from(document.querySelectorAll(`input[name=${question.id}]:checked`)).map(el => el.value);
+                else if (question.type === 'radio') {
                     const checked = document.querySelector(`input[name=${question.id}]:checked`);
-                    if (checked) {
-                        userAnswers[question.id] = checked.value;
-                    }
+                    if (checked) userAnswers[question.id] = checked.value;
                 } else if (question.type === 'contact') {
                     userAnswers['full_name'] = document.getElementById('full_name').value;
                     userAnswers['company_name'] = document.getElementById('company_name').value;
@@ -392,29 +236,21 @@
             }
         }
         
-        /**
-         * Validates the current step before proceeding.
-         * @param {number} step - The step number to validate.
-         * @returns {boolean} - True if valid, false otherwise.
-         */
         function validateStep(step) {
             if (step > 0 && step < questions.length) { 
                 const question = questions[step - 1];
                 if (question.type === 'checkbox') {
-                    const checked = document.querySelectorAll(`input[name=${question.id}]:checked`);
-                    if (checked.length === 0) {
+                    if (document.querySelectorAll(`input[name=${question.id}]:checked`).length === 0) {
                         showError('Please make at least one selection to continue.');
                         return false;
                     }
                 } else if (question.type === 'select') {
-                    const value = document.getElementById(question.id).value;
-                    if (value === "") {
+                    if (document.getElementById(question.id).value === "") {
                         showError('Please select an option to continue.');
                         return false;
                     }
                 } else if (question.type === 'radio') {
-                    const checked = document.querySelector(`input[name=${question.id}]:checked`);
-                    if (!checked) {
+                    if (!document.querySelector(`input[name=${question.id}]:checked`)) {
                         showError('Please select an option to continue.');
                         return false;
                     }
@@ -424,13 +260,8 @@
             return true;
         }
 
-        /**
-         * Moves to the next step in the form after validation.
-         */
         function nextStep() {
-            if (!validateStep(currentStep)) {
-                return; 
-            }
+            if (!validateStep(currentStep)) return; 
             saveAnswer();
             if (currentStep < questions.length) {
                 currentStep++;
@@ -438,9 +269,6 @@
             }
         }
 
-        /**
-         * Moves to the previous step in the form.
-         */
         function prevStep() {
             if (currentStep > 1) {
                 currentStep--;
@@ -449,14 +277,9 @@
             }
         }
         
-        /**
-         * Resets the application to the welcome screen.
-         */
         function restart() {
             currentStep = 0;
-            for (const key in userAnswers) {
-                delete userAnswers[key];
-            }
+            for (const key in userAnswers) delete userAnswers[key];
             welcomeScreen.classList.remove('hidden');
             questionsContainer.classList.add('hidden');
             loadingScreen.classList.add('hidden');
@@ -466,9 +289,6 @@
             initialize(); 
         }
         
-        /**
-         * Validates the final contact form before submission.
-         */
         function validateContactForm() {
             const name = document.getElementById('full_name').value.trim();
             const company = document.getElementById('company_name').value.trim();
@@ -477,8 +297,7 @@
                 showError('Please fill out all fields to get your report.');
                 return false;
             }
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 showError('Please enter a valid email address.');
                 return false;
             }
@@ -494,13 +313,8 @@
             errorMessageContainer.innerHTML = '';
         }
 
-        /**
-         * Finalizes answers, constructs the prompt, and calls the backend proxy function.
-         */
         async function getReport() {
-            if (!validateContactForm()) {
-                return;
-            }
+            if (!validateContactForm()) return;
             saveAnswer();
             
             questionsContainer.parentElement.classList.add('hidden');
@@ -508,57 +322,33 @@
             stepIndicator.classList.add('hidden');
             loadingScreen.classList.remove('hidden');
             
-            const fallbackText = `<div class="text-left">
-                        <h3 class="font-bold text-xl mb-3 mt-5">Analysis Complete</h3>
-                        <p class="text-gray-700">Our AI was unable to generate a detailed report for this specific profile. This can sometimes happen with unique or highly specialized business types.</p>
-                        <p class="text-gray-700 mt-2">However, based on your answers, we still recommend a direct consultation to assess your needs accurately. Please feel free to use the "Schedule a Free Consultation" button below.</p>
-                    </div>`;
-            const errorText = `<div class="text-left">
-                        <h3 class="font-bold text-xl mb-3 mt-5">Error</h3>
-                        <p class="text-gray-700">There was an error generating your report. This could be a temporary network issue. Please try again in a few moments.</p>
-                    </div>`;
+            const errorText = `<div class="text-left"><h3>Error</h3><p>Sorry, an error occurred while generating your report. This could be a temporary network issue. Please try again in a few moments.</p></div>`;
 
             try {
-                // The URL for our Netlify function proxy
                 const apiUrl = `/.netlify/functions/get-report`;
-                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userAnswers) // Send the user answers to our proxy
+                    body: JSON.stringify(userAnswers)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.statusText}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
                 }
 
                 const result = await response.json();
-                
-                let text = "";
-                if (result.report) {
-                    text = result.report;
-                }
-                
-                const finalReportText = (!text || text.trim() === "") ? fallbackText : text;
-                displayResults(finalReportText);
+                displayResults(result.report);
 
             } catch (error) {
-                console.error("Error fetching from proxy function:", error);
+                console.error("Error in getReport:", error);
                 displayResults(errorText);
             }
         }
 
-        /**
-         * Displays the generated report.
-         * @param {string} reportContent - The report text (Markdown or HTML fallback).
-         */
         function displayResults(reportContent) {
-            let html;
-            // Check if the content is already HTML (our fallback/error messages)
-            if (reportContent.startsWith('<div')) {
-                html = reportContent;
-            } else {
-                 // Otherwise, parse it as Markdown
+            let html = reportContent;
+            if (reportContent && !reportContent.startsWith('<div')) {
                  html = reportContent
                     .replace(/^### (.*$)/gim, '<h3 class="font-bold text-lg mb-2 mt-4">$1</h3>')
                     .replace(/^## (.*$)/gim, '<h2 class="font-bold text-xl mb-3 mt-5">$1</h2>')
@@ -568,6 +358,8 @@
                     .replace(/^\* (.*$)/gim, '<ul><li class="list-disc list-inside ml-4 mb-2">$1</li></ul>')
                     .replace(/<\/ul>\s?<ul>/gim, '')
                     .replace(/\n/g, '<br>');
+            } else if (!reportContent) {
+                html = `<div class="text-left"><h3>Analysis Complete</h3><p>Our AI was unable to generate a detailed report for this specific profile. This can sometimes happen with unique or highly specialized business types.</p></div>`;
             }
 
             document.getElementById('results-content').innerHTML = html;
@@ -575,9 +367,7 @@
             resultsScreen.classList.remove('hidden');
         }
 
-        // --- INITIALIZATION ---
         window.onload = initialize;
-
     </script>
 </body>
 </html>
