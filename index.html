@@ -3,371 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetos Data Consulting - Compliance Check-up</title>
+    <title>Connection Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .form-select, .form-input {
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-        }
-        .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-        }
-        .step-active {
-            border-color: #447073;
-            color: #447073;
-        }
-        .step-inactive {
-            border-color: #d1d5db; /* gray-300 */
-            color: #6b7280; /* gray-500 */
-        }
-        .step-complete {
-            border-color: #447073;
-            background-color: #447073;
-            color: white;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .form-input:focus, .form-select:focus {
-            border-color: #447073;
-            box-shadow: 0 0 0 2px rgba(68, 112, 115, 0.5);
-        }
-        input[type="checkbox"], input[type="radio"] {
-            color: #447073;
-        }
-        input[type="checkbox"]:focus, input[type="radio"]:focus {
-            --tw-ring-color: #447073;
-            --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-        }
-        .error-message {
-            display: none;
-            color: #dc2626;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-        }
-    </style>
 </head>
-<body class="text-gray-800" style="background-color: #e4e4e4;">
-
-    <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        
-        <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Compliance Check-up</h1>
-            <p class="mt-2 text-lg text-gray-600">Answer a few questions to get a high-level overview of your potential compliance needs.</p>
-            <div class="mt-1 text-sm text-gray-500">Powered by Aetos Data Consulting</div>
-        </header>
-
-        <div id="step-indicator" class="flex items-center justify-center mb-8 sm:mb-12"></div>
-
-        <main id="app-content" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
-
-            <div id="step-0" class="text-center fade-in">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Is Your Business Compliant?</h2>
-                <p class="text-gray-600 mb-6">Let's be honest: terms like 'GDPR' and 'CCPA' are enough to make any business owner's head spin. You know data compliance is important, but figuring out what actually applies to <em>you</em> can feel like trying to solve a riddle in the dark.</p>
-                <p class="text-gray-600 mb-8">Consider this your flashlight. This brief check-up will help illuminate your potential obligations. By answering a few questions, you'll get a personalized snapshot that translates regulatory jargon into a practical starting point.</p>
-                <button onclick="nextStep()" class="w-full sm:w-auto text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
-                    Start Analysis
-                </button>
-                <p class="text-xs text-gray-400 mt-4">Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.</p>
-            </div>
-
-            <div id="questions-container" class="hidden"></div>
-
-            <div id="loading-screen" class="hidden text-center fade-in">
-                <div class="flex justify-center items-center mb-4">
-                    <svg class="animate-spin -ml-1 mr-3 h-8 w-8" style="color: #447073;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Analyzing Your Profile...</h2>
-                <p class="text-gray-600">Our AI is generating your personalized compliance snapshot. This may take a moment.</p>
-            </div>
-
-            <div id="results-screen" class="hidden fade-in">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 border-b pb-3">Your Compliance Snapshot</h2>
-                <div id="results-content" class="prose prose-lg max-w-none text-gray-700"></div>
-                <div class="mt-8 p-6 rounded-xl text-center" style="background-color: #f0f4f4; border: 2px solid #a2b7b8;">
-                    <h3 class="text-xl font-bold text-gray-800">Ready to Take the Next Step?</h3>
-                    <p class="mt-2 text-gray-600">This report is a starting point. Aetos Data Consulting can provide an in-depth assessment and help you build a compliance program tailored to your specific needs.</p>
-                    <a href="mailto:shayne@aetosdataconsulting.com" class="mt-4 inline-block text-white font-bold py-3 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
-                        Schedule a Free Consultation
-                    </a>
-                </div>
-                 <div class="mt-6 text-center">
-                    <button onclick="restart()" class="font-semibold transition-opacity duration-300" style="color: #447073;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">Start Over</button>
-                </div>
-            </div>
-
-        </main>
-
-        <div id="nav-buttons" class="flex justify-between mt-8 hidden">
-            <button id="prev-btn" onclick="prevStep()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition-colors duration-300">Back</button>
-            <button id="next-btn" onclick="nextStep()" class="text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Next</button>
-            <button id="submit-btn" onclick="getReport()" class="hidden text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Get My Report</button>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="text-center">
+        <h1 class="text-2xl font-bold mb-4">Connection Test</h1>
+        <p class="mb-4">Click the button to test the connection to the backend server.</p>
+        <button id="test-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Run Test
+        </button>
+        <div id="result" class="mt-6 p-4 bg-white rounded shadow-md text-left">
+            <h2 class="font-bold">Result:</h2>
+            <pre id="result-text" class="whitespace-pre-wrap"></pre>
         </div>
-        <div id="error-message-container" class="text-center"></div>
-
     </div>
 
     <script>
-        const questions = [
-            { id: 'industry', title: 'About Your Business', prompt: 'What industry does your business operate in?', type: 'select', options: ['Technology/SaaS', 'Healthcare', 'E-commerce/Retail', 'Financial Services', 'Marketing/Advertising', 'Education', 'Other'] },
-            { id: 'company_size', title: 'Business Scale', prompt: 'What is the approximate size of your company?', type: 'select', options: ['1-10 employees', '11-50 employees', '51-250 employees', '251-1000 employees', '1000+ employees'] },
-            { id: 'annual_revenue', title: 'Financial Scale', prompt: 'What is your approximate annual revenue?', explanation: 'This helps determine the potential scale of compliance penalties.', type: 'select', options: ['$0 - $249,999', '$250,000 - $499,999', '$500,000 - $749,999', '$750,000 - $999,999', '$1M+'] },
-            { id: 'customer_locations', title: 'Customer Base', prompt: 'Where are your customers located? (Select all that apply)', type: 'checkbox', options: ['United States (General)', 'California (USA)', 'European Union (EU)', 'United Kingdom (UK)', 'Canada', 'Other/Global'] },
-            { id: 'customer_type', title: 'Customer Type', prompt: 'Who are your customers?', type: 'radio', options: ['Businesses', 'Consumers', 'Both'] },
-            { id: 'data_types', title: 'Data Collection', prompt: 'What types of personal data do you collect or process? (Select all that apply)', type: 'checkbox', options: [ 'Basic contact info', 'Other identifying information (SSN, IP address)', 'Health or medical information (PHI)', 'Genetics', 'Financial information (credit card numbers, bank accounts)', 'Biometrics', 'Data on individuals under 16 years old', 'Racial or ethnic origin', 'Political opinions', 'Religious or philosophical beliefs', 'Trade union membership', 'Sex life or orientation' ] },
-            { id: 'contact_info', title: 'Your Report', prompt: 'Where should we send your report?', explanation: 'Enter your details below to receive your personalized compliance snapshot.', type: 'contact' }
-        ];
-        let currentStep = 0;
-        const userAnswers = {};
-        const stepIndicator = document.getElementById('step-indicator');
-        const appContent = document.getElementById('app-content');
-        const welcomeScreen = document.getElementById('step-0');
-        const questionsContainer = document.getElementById('questions-container');
-        const loadingScreen = document.getElementById('loading-screen');
-        const resultsScreen = document.getElementById('results-screen');
-        const navButtons = document.getElementById('nav-buttons');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const submitBtn = document.getElementById('submit-btn');
-        const errorMessageContainer = document.getElementById('error-message-container');
-
-        function initialize() {
-            let indicatorHTML = '';
-            questions.forEach((q, index) => {
-                indicatorHTML += `${index > 0 ? '<div class="flex-auto border-t-2 step-inactive mx-4"></div>' : ''}<div id="indicator-${index + 1}" class="step-indicator-item flex items-center step-inactive"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-bold">${index + 1}</div><span class="hidden md:block ml-3 font-semibold">${q.title}</span></div>`;
-            });
-            stepIndicator.innerHTML = indicatorHTML;
-            
-            let questionsHTML = '';
-            questions.forEach((q, index) => {
-                questionsHTML += `<div id="step-${index + 1}" class="hidden fade-in" data-step="${index + 1}"><h3 class="text-xl font-semibold text-gray-800 mb-2">${q.prompt}</h3>`;
-                if(q.explanation) questionsHTML += `<p class="text-gray-500 mb-6">${q.explanation}</p>`;
-                else questionsHTML += `<div class="mb-6"></div>`;
-                questionsHTML += `<div class="space-y-4">`;
-                if (q.type === 'select') {
-                    questionsHTML += `<select id="${q.id}" class="w-full p-3 border border-gray-300 rounded-lg appearance-none form-select"><option value="" disabled selected>Please select an option...</option>`;
-                    q.options.forEach(opt => { questionsHTML += `<option value="${opt}">${opt}</option>`; });
-                    questionsHTML += `</select>`;
-                } else if (q.type === 'checkbox') {
-                    q.options.forEach((opt, i) => { questionsHTML += `<label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 rounded border-gray-300"><span class="ml-3 text-gray-700">${opt}</span></label>`; });
-                } else if (q.type === 'radio') {
-                    q.options.forEach((opt, i) => { questionsHTML += `<label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="radio" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 border-gray-300"><span class="ml-3 text-gray-700">${opt}</span></label>`; });
-                } else if (q.type === 'contact') {
-                    questionsHTML += `<div><label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label><input type="text" id="full_name" name="full_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div><div><label for="company_name" class="block text-sm font-medium text-gray-700">Company Name</label><input type="text" id="company_name" name="company_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div><div><label for="work_email" class="block text-sm font-medium text-gray-700">Work Email</label><input type="email" id="work_email" name="work_email" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div>`;
-                }
-                questionsHTML += `</div></div>`;
-            });
-            questionsContainer.innerHTML = questionsHTML;
-            updateUI();
-        }
-
-        function updateUI() {
-            if (currentStep > 0) questionsContainer.classList.remove('hidden');
-            else questionsContainer.classList.add('hidden');
-            for (let i = 0; i <= questions.length; i++) {
-                const stepEl = document.getElementById(`step-${i}`);
-                if (stepEl) stepEl.classList.add('hidden');
-            }
-            const currentStepEl = document.getElementById(`step-${currentStep}`);
-            if (currentStepEl) currentStepEl.classList.remove('hidden');
-            if (currentStep === 0) navButtons.classList.add('hidden');
-            else {
-                navButtons.classList.remove('hidden');
-                prevBtn.style.visibility = currentStep > 1 ? 'visible' : 'hidden';
-                nextBtn.style.display = currentStep < questions.length ? 'block' : 'none';
-                submitBtn.style.display = currentStep === questions.length ? 'block' : 'none';
-            }
-            for (let i = 1; i <= questions.length; i++) {
-                const indicator = document.getElementById(`indicator-${i}`);
-                if (!indicator) continue;
-                const indicatorCircle = indicator.querySelector('div');
-                const indicatorLine = indicator.previousElementSibling;
-                indicatorCircle.classList.remove('step-active', 'step-complete', 'step-inactive');
-                if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.remove('step-active', 'step-complete', 'step-inactive');
-                if (i < currentStep) {
-                    indicatorCircle.classList.add('step-complete');
-                    indicatorCircle.innerHTML = '&#10003;';
-                    if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-complete');
-                } else if (i === currentStep) {
-                    indicatorCircle.classList.add('step-active');
-                    indicatorCircle.innerHTML = i;
-                    if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-inactive');
-                } else {
-                    indicatorCircle.classList.add('step-inactive');
-                    indicatorCircle.innerHTML = i;
-                    if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-inactive');
-                }
-            }
-        }
-
-        function saveAnswer() {
-            if (currentStep > 0 && currentStep <= questions.length) {
-                const question = questions[currentStep - 1];
-                if (question.type === 'select') userAnswers[question.id] = document.getElementById(question.id).value;
-                else if (question.type === 'checkbox') userAnswers[question.id] = Array.from(document.querySelectorAll(`input[name=${question.id}]:checked`)).map(el => el.value);
-                else if (question.type === 'radio') {
-                    const checked = document.querySelector(`input[name=${question.id}]:checked`);
-                    if (checked) userAnswers[question.id] = checked.value;
-                } else if (question.type === 'contact') {
-                    userAnswers['full_name'] = document.getElementById('full_name').value;
-                    userAnswers['company_name'] = document.getElementById('company_name').value;
-                    userAnswers['work_email'] = document.getElementById('work_email').value;
-                }
-            }
-        }
-        
-        function validateStep(step) {
-            if (step > 0 && step < questions.length) { 
-                const question = questions[step - 1];
-                if (question.type === 'checkbox') {
-                    if (document.querySelectorAll(`input[name=${question.id}]:checked`).length === 0) {
-                        showError('Please make at least one selection to continue.');
-                        return false;
-                    }
-                } else if (question.type === 'select') {
-                    if (document.getElementById(question.id).value === "") {
-                        showError('Please select an option to continue.');
-                        return false;
-                    }
-                } else if (question.type === 'radio') {
-                    if (!document.querySelector(`input[name=${question.id}]:checked`)) {
-                        showError('Please select an option to continue.');
-                        return false;
-                    }
-                }
-            }
-            clearError(); 
-            return true;
-        }
-
-        function nextStep() {
-            if (!validateStep(currentStep)) return; 
-            saveAnswer();
-            if (currentStep < questions.length) {
-                currentStep++;
-                updateUI();
-            }
-        }
-
-        function prevStep() {
-            if (currentStep > 1) {
-                currentStep--;
-                clearError(); 
-                updateUI();
-            }
-        }
-        
-        function restart() {
-            currentStep = 0;
-            for (const key in userAnswers) delete userAnswers[key];
-            welcomeScreen.classList.remove('hidden');
-            questionsContainer.classList.add('hidden');
-            loadingScreen.classList.add('hidden');
-            resultsScreen.classList.add('hidden');
-            navButtons.classList.add('hidden');
-            errorMessageContainer.innerHTML = '';
-            initialize(); 
-        }
-        
-        function validateContactForm() {
-            const name = document.getElementById('full_name').value.trim();
-            const company = document.getElementById('company_name').value.trim();
-            const email = document.getElementById('work_email').value.trim();
-            if (name === '' || email === '' || company === '') {
-                showError('Please fill out all fields to get your report.');
-                return false;
-            }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('Please enter a valid email address.');
-                return false;
-            }
-            clearError();
-            return true;
-        }
-
-        function showError(message) {
-            errorMessageContainer.innerHTML = `<p class="error-message" style="display: block;">${message}</p>`;
-        }
-
-        function clearError() {
-            errorMessageContainer.innerHTML = '';
-        }
-
-        async function getReport() {
-            if (!validateContactForm()) return;
-            saveAnswer();
-            
-            questionsContainer.parentElement.classList.add('hidden');
-            navButtons.classList.add('hidden');
-            stepIndicator.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
-            
-            const errorText = `<div class="text-left"><h3>Error</h3><p>Sorry, an error occurred while generating your report. This could be a temporary network issue. Please try again in a few moments.</p></div>`;
+        document.getElementById('test-button').addEventListener('click', async () => {
+            const resultText = document.getElementById('result-text');
+            resultText.textContent = 'Testing connection...';
 
             try {
-                const apiUrl = `/.netlify/functions/get-report`;
-                const response = await fetch(apiUrl, {
+                const response = await fetch('/.netlify/functions/get-report', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userAnswers)
+                    body: JSON.stringify({ message: 'Hello from the browser' })
                 });
 
+                resultText.textContent += `\nResponse Status: ${response.status}`;
+
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                    const errorBody = await response.text();
+                    throw new Error(`Server responded with an error: ${errorBody}`);
                 }
 
-                const result = await response.json();
-                displayResults(result.report);
+                const data = await response.json();
+                resultText.textContent += `\nResponse Data: ${JSON.stringify(data, null, 2)}`;
 
             } catch (error) {
-                console.error("Error in getReport:", error);
-                displayResults(errorText);
+                resultText.textContent += `\nCaught an error: ${error.message}`;
+                console.error('Test failed:', error);
             }
-        }
-
-        function displayResults(reportContent) {
-            let html = reportContent;
-            if (reportContent && !reportContent.startsWith('<div')) {
-                 html = reportContent
-                    .replace(/^### (.*$)/gim, '<h3 class="font-bold text-lg mb-2 mt-4">$1</h3>')
-                    .replace(/^## (.*$)/gim, '<h2 class="font-bold text-xl mb-3 mt-5">$1</h2>')
-                    .replace(/^# (.*$)/gim, '<h1 class="font-bold text-2xl mb-4">$1</h1>')
-                    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                    .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                    .replace(/^\* (.*$)/gim, '<ul><li class="list-disc list-inside ml-4 mb-2">$1</li></ul>')
-                    .replace(/<\/ul>\s?<ul>/gim, '')
-                    .replace(/\n/g, '<br>');
-            } else if (!reportContent) {
-                html = `<div class="text-left"><h3>Analysis Complete</h3><p>Our AI was unable to generate a detailed report for this specific profile. This can sometimes happen with unique or highly specialized business types.</p></div>`;
-            }
-
-            document.getElementById('results-content').innerHTML = html;
-            loadingScreen.classList.add('hidden');
-            resultsScreen.classList.remove('hidden');
-        }
-
-        window.onload = initialize;
+        });
     </script>
 </body>
 </html>
