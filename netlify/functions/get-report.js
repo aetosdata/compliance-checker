@@ -1,103 +1,89 @@
 const fetch = require('node-fetch');
-const { URLSearchParams } = require('url');
-
-// Function to convert Markdown to basic HTML
-function parseMarkdown(text) {
-    if (!text) return "";
-    return text
-        .replace(/^### (.*$)/gim, '<h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; margin-top: 1rem;">$1</h3>')
-        .replace(/^## (.*$)/gim, '<h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; margin-top: 1.25rem;">$1</h2>')
-        .replace(/^# (.*$)/gim, '<h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 1rem;">$1</h1>')
-        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-        .replace(/\*(.*)\*/gim, '<em>$1</em>')
-        .replace(/^\* (.*$)/gim, '<li style="list-style-type: disc; margin-left: 2rem;">$1</li>')
-        .replace(/(<li>(.|\n)*?<\/li>)/g, '<ul>$1</ul>')
-        .replace(/<\/ul>\s?<ul>/g, '')
-        .replace(/\n/g, '<br>');
-}
-
-// Function to generate the full HTML response page
-function createHtmlResponse(reportHtml) {
-    return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Compliance Snapshot</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style> body { font-family: 'Inter', sans-serif; } </style>
-    </head>
-    <body class="bg-gray-100">
-        <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-            <header class="text-center mb-8">
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Your Compliance Snapshot</h1>
-                <p class="mt-2 text-lg text-gray-600">Powered by Aetos Data Consulting</p>
-            </header>
-            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
-                <div class="prose prose-lg max-w-none text-gray-700">
-                    ${reportHtml}
-                </div>
-            </main>
-        </div>
-    </body>
-    </html>
-    `;
-}
 
 exports.handler = async (event) => {
+    // Only allow POST requests
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
-        const params = new URLSearchParams(event.body);
-        const userAnswers = Object.fromEntries(params.entries());
-        // Handle checkboxes, which might have multiple values
-        userAnswers.customer_locations = params.getAll('customer_locations');
-        userAnswers.data_types = params.getAll('data_types');
-
+        const userAnswers = JSON.parse(event.body);
         const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) { throw new Error("API key is not configured."); }
 
-        // --- Build the Prompt ---
+        if (!apiKey) {
+            throw new Error("API key is not configured in Netlify environment variables.");
+        }
+
+        // --- Start Building the Prompt ---
         let mandatoryRegulations = [];
         if (userAnswers.customer_locations.includes('United States (General)')) {
-            mandatoryRegulations.push('CAN-SPAM Act', 'VPPA', 'CIPA', 'FTC & FCC Regulations', 'TCPA');
+            mandatoryRegulations.push(
+                'CAN-SPAM Act',
+                'Video Privacy Protection Act (VPPA)',
+                'Children\'s Internet Protection Act (CIPA)',
+                'FTC & FCC Regulations',
+                'Telephone Consumer Protection Act (TCPA)'
+            );
         }
         if (userAnswers.customer_locations.includes('European Union (EU)')) {
-            mandatoryRegulations.push('GDPR', 'ePrivacy Directive');
+            mandatoryRegulations.push(
+                'General Data Protection Regulation (GDPR)',
+                'ePrivacy Directive'
+            );
         }
-        const mandatoryRegulationsText = mandatoryRegulations.length > 0 ? `\n\n**Mandatory Regulations:**\nYou MUST include: ${mandatoryRegulations.join(', ')}.` : '';
+
+        const mandatoryRegulationsText = mandatoryRegulations.length > 0
+            ? `\n\n**Mandatory Regulations to Include:**\nBased on the customer locations, you MUST include the following regulations in your response: ${mandatoryRegulations.join(', ')}.`
+            : '';
         
-        const specialCategoryData = ['Health or medical information (PHI)', 'Genetics', 'Biometrics', 'Racial or ethnic origin', 'Political opinions', 'Religious or philosophical beliefs', 'Trade union membership', 'Sex life or orientation', 'Data on individuals under 16 years old'];
+        const specialCategoryData = [
+            'Health or medical information (PHI)',
+            'Genetics',
+            'Biometrics',
+            'Racial or ethnic origin',
+            'Political opinions',
+            'Religious or philosophical beliefs',
+            'Trade union membership',
+            'Sex life or orientation',
+            'Data on individuals under 16 years old'
+        ];
+
         let sensitiveDataNotice = '';
         const isEuSelected = userAnswers.customer_locations.includes('European Union (EU)');
         const hasSpecialCategoryData = userAnswers.data_types.some(type => specialCategoryData.includes(type));
+
         if (isEuSelected && hasSpecialCategoryData) {
-            sensitiveDataNotice = `\n\n**Important Note:** The user is processing "special categories of personal data" under GDPR. Emphasize the heightened compliance obligations.`;
+            sensitiveDataNotice = `\n\n**Important Note on Data Sensitivity:** The user has indicated they are processing "special categories of personal data" under GDPR. This requires a higher level of protection and explicit consent. You MUST emphasize the heightened compliance obligations and risks associated with this type of data in your analysis.`;
         }
 
         const prompt = `
-            Analyze the following business profile and generate a "Compliance Snapshot" in Markdown.
-            - Profile: ${JSON.stringify(userAnswers)}
+            Act as an expert compliance consultant for startups and small businesses. 
+            A business has provided the following profile:
+            - Company Name: ${userAnswers.company_name}
+            - Industry: ${userAnswers.industry}
+            - Company Size: ${userAnswers.company_size}
+            - Annual Revenue: ${userAnswers.annual_revenue}
+            - Customer Locations: ${userAnswers.customer_locations.join(', ')}
+            - Customer Type: ${userAnswers.customer_type}
+            - Data Types Collected: ${userAnswers.data_types.join(', ')}
             ${mandatoryRegulationsText}
             ${sensitiveDataNotice}
+
+            **Analysis Task:**
+            Generate a "Compliance Snapshot" in Markdown format. The snapshot should include:
+            1.  A brief, encouraging introductory paragraph.
+            2.  A section titled "Key Regulations to Consider". This section **must begin with the mandatory regulations listed above (if any)**. Then, add any OTHER major regulations (like HIPAA, etc.) that are also likely to apply based on the full business profile. For each regulation, provide a one-sentence explanation of what it is and a one-sentence explanation for why it might apply to this specific business.
+            3.  A section titled "Initial Action Plan" with a bulleted list of 3-5 practical, high-level first steps this business should take.
+            4.  A concluding paragraph that emphasizes this is a starting point and professional advice is recommended for a full compliance strategy.
             
-            **Task:**
-            Generate a "Compliance Snapshot" in Markdown with:
-            1. An intro paragraph.
-            2. A "Key Regulations to Consider" section. Start with any mandatory regulations, then add others. For each, explain what it is and why it applies.
-            3. An "Initial Action Plan" section with a bulleted list of 3-5 steps.
-            4. A concluding paragraph.
+            Keep the tone helpful, clear, and professional. Avoid overly technical jargon. Do not give definitive legal advice.
         `;
-        // --- End Prompt ---
-        
-        const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        // --- End Building the Prompt ---
+
+        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        // *** THIS IS THE CORRECTED URL ***
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -105,25 +91,31 @@ exports.handler = async (event) => {
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) { throw new Error(`Google AI API Error: ${response.statusText}`); }
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('Google AI API Error:', errorBody);
+            throw new Error(`Google AI API Error: ${response.statusText} (${response.status})`);
+        }
 
         const result = await response.json();
-        const reportMarkdown = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No detailed report could be generated for this profile.";
-        const reportHtml = parseMarkdown(reportMarkdown);
+        
+        let text = "";
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            text = result.candidates[0].content.parts[0].text;
+        }
 
         return {
             statusCode: 200,
-            headers: { 'Content-Type': 'text/html' },
-            body: createHtmlResponse(reportHtml)
+            body: JSON.stringify({ report: text })
         };
 
     } catch (error) {
-        console.error('Error in function:', error);
-        const errorHtml = `<h1>Error</h1><p>Sorry, an error occurred while generating your report.</p><p>Error: ${error.message}</p>`;
+        console.error('Error in Netlify function:', error);
         return {
-            statusCode: 200, // Return 200 so the user sees a friendly error page, not a browser default error
-            headers: { 'Content-Type': 'text/html' },
-            body: createHtmlResponse(errorHtml)
+            statusCode: 500,
+            body: JSON.stringify({ error: `An internal server error occurred: ${error.message}` })
         };
     }
 };
