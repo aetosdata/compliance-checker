@@ -3,371 +3,911 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetos Data Consulting - Compliance Check-up</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>What's Your Risk?</title>
     <style>
+        /* Basic CSS - mostly carried over, with additions for step management */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #e4e4e4; /* Updated background color */
+            color: #333;
         }
-        .form-select, .form-input {
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
+        h1, h2 {
+            color: #447073; /* Updated H1/H2 color */
         }
-        .step-active {
-            border-color: #447073;
-            color: #447073;
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
         }
-        .step-inactive {
-            border-color: #d1d5db; /* gray-300 */
-            color: #6b7280; /* gray-500 */
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: calc(100% - 20px); /* Adjust for padding */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-        .step-complete {
-            border-color: #447073;
-            background-color: #447073;
-            color: white;
+        button {
+            background-color: #447073; /* Updated button background color */
+            color: #e4e4e4; /* Updated button font color */
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-right: 10px; /* Space between buttons */
         }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
+        button:hover {
+            background-color: #315052; /* A slightly darker shade for hover effect */
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        button#prevStep {
+            background-color: #6c757d; /* Grey for previous button, can be updated too if desired */
         }
-        .form-input:focus, .form-select:focus {
-            border-color: #447073;
-            box-shadow: 0 0 0 2px rgba(68, 112, 115, 0.5);
+        button#prevStep:hover {
+            background-color: #5a6268;
         }
-        input[type="checkbox"], input[type="radio"] {
-            color: #447073;
+
+        .form-intro {
+            text-align: center; /* Center the intro text and button */
         }
-        input[type="checkbox"]:focus, input[type="radio"]:focus {
-            --tw-ring-color: #447073;
-            --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+        .form-step {
+            display: none; /* All steps hidden by default, JS will show the first */
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+        .form-step.active {
+            display: block; /* Active step is shown */
+        }
+        .radio-group label, .checkbox-group label {
+            display: inline-block; /* For radio/checkbox labels */
+            margin-right: 15px;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        .radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
+            margin-right: 5px;
+            width: auto; /* Override general input width */
+        }
+
+
+        #results-section {
+            display: none; /* Controlled by JavaScript */
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .regulation-item {
+            background-color: #e9f7ff;
+            border-left: 5px solid #447073; /* Updated accent color here! */
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .regulation-item h3 {
+            margin-top: 0;
+            color: #447073; /* Updated heading color here! */
         }
         .error-message {
-            display: none;
-            color: #dc2626;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
+            color: red;
+            margin-bottom: 10px;
+        }
+        .navigation-buttons {
+            margin-top: 20px;
+            text-align: right; /* Align buttons to the right */
+        }
+        .navigation-buttons button {
+            margin-left: 10px; /* Space between nav buttons */
+        }
+        .disclaimer {
+            font-size: 0.8em; /* Smaller font size */
+            color: #666;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px dashed #eee;
+            margin-bottom: 20px; /* Space before the new button */
+        }
+        .small-text {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: -10px; /* Pull it closer to the question */
+            margin-bottom: 15px;
+        }
+        /* Style for required radio/checkbox groups if not selected */
+        .invalid-group-border {
+            border: 1px solid red;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        /* Styles for Risk Score Numbers */
+        .risk-score-value {
+            font-size: 1.2em; /* Increased font size */
+            font-weight: bold;
+        }
+        .risk-low {
+            color: #28a745; /* Green */
+        }
+        .risk-medium {
+            color: #ffc107; /* Orange */
+        }
+        .risk-high {
+            color: #dc3545; /* Red */
+        }
+
+        /* NEW: Styles for next steps section */
+        .next-steps-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        .next-steps-section h3 {
+            color: #447073;
+            margin-bottom: 15px;
+        }
+        .next-steps-section .action-button {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 25px;
+            background-color: #447073;
+            color: #e4e4e4;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+        .next-steps-section .action-button:hover {
+            background-color: #315052;
         }
     </style>
 </head>
-<body class="text-gray-800" style="background-color: #e4e4e4;">
+<body>
 
-    <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        
-        <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Compliance Check-up</h1>
-            <p class="mt-2 text-lg text-gray-600">Answer a few questions to get a high-level overview of your potential compliance needs.</p>
-            <div class="mt-1 text-sm text-gray-500">Powered by Aetos Data Consulting</div>
-        </header>
-
-        <div id="step-indicator" class="flex items-center justify-center mb-8 sm:mb-12"></div>
-
-        <main id="app-content" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
-
-            <div id="step-0" class="text-center fade-in">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Is Your Business Compliant?</h2>
-                <p class="text-gray-600 mb-6">Let's be honest: terms like 'GDPR' and 'CCPA' are enough to make any business owner's head spin. You know data compliance is important, but figuring out what actually applies to <em>you</em> can feel like trying to solve a riddle in the dark.</p>
-                <p class="text-gray-600 mb-8">Consider this your flashlight. This brief check-up will help illuminate your potential obligations. By answering a few questions, you'll get a personalized snapshot that translates regulatory jargon into a practical starting point.</p>
-                <button onclick="nextStep()" class="w-full sm:w-auto text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
-                    Start Analysis
-                </button>
-                <p class="text-xs text-gray-400 mt-4">Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.</p>
-            </div>
-
-            <div id="questions-container" class="hidden"></div>
-
-            <div id="loading-screen" class="hidden text-center fade-in">
-                <div class="flex justify-center items-center mb-4">
-                    <svg class="animate-spin -ml-1 mr-3 h-8 w-8" style="color: #447073;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Analyzing Your Profile...</h2>
-                <p class="text-gray-600">Our AI is generating your personalized compliance snapshot. This may take a moment.</p>
-            </div>
-
-            <div id="results-screen" class="hidden fade-in">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4 border-b pb-3">Your Compliance Snapshot</h2>
-                <div id="results-content" class="prose prose-lg max-w-none text-gray-700"></div>
-                <div class="mt-8 p-6 rounded-xl text-center" style="background-color: #f0f4f4; border: 2px solid #a2b7b8;">
-                    <h3 class="text-xl font-bold text-gray-800">Ready to Take the Next Step?</h3>
-                    <p class="mt-2 text-gray-600">This report is a starting point. Aetos Data Consulting can provide an in-depth assessment and help you build a compliance program tailored to your specific needs.</p>
-                    <a href="mailto:shayne@aetosdataconsulting.com" class="mt-4 inline-block text-white font-bold py-3 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
-                        Schedule a Free Consultation
-                    </a>
-                </div>
-                 <div class="mt-6 text-center">
-                    <button onclick="restart()" class="font-semibold transition-opacity duration-300" style="color: #447073;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">Start Over</button>
-                </div>
-            </div>
-
-        </main>
-
-        <div id="nav-buttons" class="flex justify-between mt-8 hidden">
-            <button id="prev-btn" onclick="prevStep()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition-colors duration-300">Back</button>
-            <button id="next-btn" onclick="nextStep()" class="text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Next</button>
-            <button id="submit-btn" onclick="getReport()" class="hidden text-white font-bold py-2 px-6 rounded-lg transition-opacity duration-300" style="background-color: #447073;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Get My Report</button>
+    <div class="container">
+        <h1>What's Your Risk?</h1>
+        <div class="form-intro">
+            <p>Let's be honest: terms like 'GDPR' and 'CCPA' are enough to make any business owner's head spin. You know data compliance is important, but figuring out what actually applies to&nbsp;you&nbsp;can feel like trying to put together a puzzle in the dark.</p>
+            <p>Consider this your flashlight. This brief check-up will help illuminate your potential obligations. By answering a few questions, you'll get a personalized snapshot that translates regulatory jargon into a practical starting point.</p>
+            <p class="disclaimer">Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.</p>
+            <button type="button" id="startAnalysisButton">Start Analysis</button>
         </div>
-        <div id="error-message-container" class="text-center"></div>
 
+        <div id="regulationFormContainer" style="display: none;">
+            <div class="form-step" data-step="1">
+                <h2>Your Industry</h2>
+                <div class="form-group radio-group" data-group-name="industry">
+                    <p>What industry does your business operate in?</p>
+                    <label><input type="radio" name="industry" value="technology" required> Technology/SaaS</label><br>
+                    <label><input type="radio" name="industry" value="healthcare" required> Healthcare/Life Sciences</label><br>
+                    <label><input type="radio" name="industry" value="ecommerce" required> E-commerce/Retail</label><br>
+                    <label><input type="radio" name="industry" value="financial_services" required> Financial Services</label><br>
+                    <label><input type="radio" name="industry" value="marketing_advertising" required> Marketing/Advertising</label><br>
+                    <label><input type="radio" name="industry" value="education" required> Education</label><br>
+                    <label><input type="radio" name="industry" value="other_industry" required> Other</label>
+                </div>
+                <div class="navigation-buttons">
+                    <button type="button" id="nextStep1">Next</button>
+                </div>
+            </div>
+
+            <div class="form-step" data-step="2">
+                <h2>Company Details</h2>
+                <div class="form-group radio-group" data-group-name="companySize">
+                    <p>What is the approximate size of your company?</p>
+                    <label><input type="radio" name="companySize" value="1-10" required> 1-10 employees</label><br>
+                    <label><input type="radio" name="companySize" value="11-50" required> 11-50 employees</label><br>
+                    <label><input type="radio" name="companySize" value="51-250" required> 51-250 employees</label><br>
+                    <label><input type="radio" name="companySize" value="251-1000" required> 251-1,000 employees</label><br>
+                    <label><input type="radio" name="companySize" value="over_1000" required> Over 1,000 employees</label>
+                </div>
+                <div class="form-group radio-group" data-group-name="annualRevenue">
+                    <p>What is your approximate annual revenue?</p>
+                    <p class="small-text">This helps us determine the potential level of scrutiny and scale of compliance penalties.</p>
+                    <label><input type="radio" name="annualRevenue" value="1-249k" required> $1 - $249k</label><br>
+                    <label><input type="radio" name="annualRevenue" value="250k-499k" required> $250k - $499k</label><br>
+                    <label><input type="radio" name="annualRevenue" value="500k-749k" required> $500k - $749k</label><br>
+                    <label><input type="radio" name="annualRevenue" value="750k-999k" required> $750k - $999k</label><br>
+                    <label><input type="radio" name="annualRevenue" value="1M+" required> $1M+</label>
+                </div>
+                <div class="navigation-buttons">
+                    <button type="button" id="prevStep2">Previous</button>
+                    <button type="button" id="nextStep2">Next</button>
+                </div>
+            </div>
+
+            <div class="form-step" data-step="3">
+                <h2>Your Customers</h2>
+                <div class="form-group checkbox-group" data-group-name="customerLocation">
+                    <p>Where are your customers located?</p>
+                    <p class="small-text">Select all that apply.</p>
+                    <label><input type="checkbox" name="customerLocation" value="united_states"> United States</label><br>
+                    <label><input type="checkbox" name="customerLocation" value="european_union"> European Union</label><br>
+                    <label><input type="checkbox" name="customerLocation" value="united_kingdom"> United Kingdom</label><br>
+                    <label><input type="checkbox" name="customerLocation" value="other_general"> Other/General</label>
+                </div>
+                <div class="form-group radio-group" data-group-name="customerType">
+                    <p>Who are your customers?</p>
+                    <label><input type="radio" name="customerType" value="consumers" required> Consumers</label><br>
+                    <label><input type="radio" name="customerType" value="businesses" required> Businesses</label><br>
+                    <label><input type="radio" name="customerType" value="both" required> Both</label>
+                </div>
+                <div class="navigation-buttons">
+                    <button type="button" id="prevStep3">Previous</button>
+                    <button type="button" id="nextStep3">Next</button>
+                </div>
+            </div>
+
+            <div class="form-step" data-step="4">
+                <h2>Data Collected</h2>
+                <div class="form-group checkbox-group" data-group-name="dataType">
+                    <p>What types of data do you collect or process?</p>
+                    <p class="small-text">Select all that apply.</p>
+                    <label><input type="checkbox" name="dataType" value="basic_contact"> Basic contact info</label><br>
+                    <label><input type="checkbox" name="dataType" value="health_phi"> Health or medical information (PHI)</label><br>
+                    <label><input type="checkbox" name="dataType" value="genetics"> Genetics</label><br>
+                    <label><input type="checkbox" name="dataType" value="financial"> Financial information (credit card numbers, bank accounts)</label><br>
+                    <label><input type="checkbox" name="dataType" value="biometrics"> Biometrics</label><br>
+                    <label><input type="checkbox" name="dataType" value="under_16"> Data on individuals under 16 years old</label><br>
+                    <label><input type="checkbox" name="dataType" value="racial_ethnic"> Racial or ethnic origin</label><br>
+                    <label><input type="checkbox" name="dataType" value="political_opinion"> Political opinions (including trade union membership)</label><br>
+                    <label><input type="checkbox" name="dataType" value="religious_philosophical"> Religious or philosophical beliefs</label><br>
+                    <label><input type="checkbox" name="dataType" value="sex_life_orientation"> Sex life or orientation</label>
+                </div>
+                <div class="navigation-buttons">
+                    <button type="button" id="prevStep4">Previous</button>
+                    <button type="button" id="nextStep4">Next</button>
+                </div>
+            </div>
+
+            <div class="form-step" data-step="5">
+                <h2>Where should we send your report?</h2>
+                <div class="form-group">
+                    <label for="fullName">Full Name:</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="businessName">Business Name:</label>
+                    <input type="text" id="businessName" name="businessName" placeholder="e.g., Acme Co." required>
+                </div>
+                <div class="form-group">
+                    <label for="yourEmail">Email:</label>
+                    <input type="email" id="yourEmail" name="yourEmail" placeholder="your@example.com" required>
+                </div>
+                <div class="navigation-buttons">
+                    <button type="button" id="prevStep5">Previous</button>
+                    <button type="button" id="generateReportButton">Generate Report</button>
+                </div>
+            </div>
+        </div> <div id="results-section">
+            <h2>Your Customized Risk Analysis for <span id="reportBusinessName"></span></h2>
+            <p>Based on your answers, we have estimated an approximate risk level for your business. The lower the score, the lower your business's estimated individual risk.</p>
+            <p>Please note that every business is different, and this is based on only a few data points. For a more in-depth analysis, you can reach out to us for a <a href="https://www.aetos-data.com/contact" target="_blank" style="color: #447073; text-decoration: none;">free preliminary consultation</a>.</p>
+            <div id="regulationsOutput">
+                </div>
+            <p>A copy of this report has been sent to <strong id="reportEmailAddress"></strong>.</p>
+            <p style="display: none;">
+                <a id="emailReportLink" href="#" target="_blank" style="color: #447073; text-decoration: none;">Click here to email this report to yourself (opens in your email client).</a>
+            </p>
+            <button id="startOverButton" style="margin-top: 20px;">Start Over</button>
+            <div class="next-steps-section">
+                <h3>See the Full Picture</h3>
+                <p>You've seen the tip of the iceberg. The free assessment flags potential vulnerabilities. For just $75, our Comprehensive Assessment dives deep to uncover your full risk profile and gives you a clear plan to mitigate it.</p>
+                <a href="https://www.aetos-data.com/services/p/compliance-snapshot-expert-review" target="_blank" class="action-button">Uncover My Full Risk Profile</a>
+            </div>
+        </div>
     </div>
 
     <script>
-        const questions = [
-            { id: 'industry', title: 'About Your Business', prompt: 'What industry does your business operate in?', type: 'select', options: ['Technology/SaaS', 'Healthcare', 'E-commerce/Retail', 'Financial Services', 'Marketing/Advertising', 'Education', 'Other'] },
-            { id: 'company_size', title: 'Business Scale', prompt: 'What is the approximate size of your company?', type: 'select', options: ['1-10 employees', '11-50 employees', '51-250 employees', '251-1000 employees', '1000+ employees'] },
-            { id: 'annual_revenue', title: 'Financial Scale', prompt: 'What is your approximate annual revenue?', explanation: 'This helps determine the potential scale of compliance penalties.', type: 'select', options: ['$0 - $249,999', '$250,000 - $499,999', '$500,000 - $749,999', '$750,000 - $999,999', '$1M+'] },
-            { id: 'customer_locations', title: 'Customer Base', prompt: 'Where are your customers located? (Select all that apply)', type: 'checkbox', options: ['United States (General)', 'California (USA)', 'European Union (EU)', 'United Kingdom (UK)', 'Canada', 'Other/Global'] },
-            { id: 'customer_type', title: 'Customer Type', prompt: 'Who are your customers?', type: 'radio', options: ['Businesses', 'Consumers', 'Both'] },
-            { id: 'data_types', title: 'Data Collection', prompt: 'What types of personal data do you collect or process? (Select all that apply)', type: 'checkbox', options: [ 'Basic contact info', 'Other identifying information (SSN, IP address)', 'Health or medical information (PHI)', 'Genetics', 'Financial information (credit card numbers, bank accounts)', 'Biometrics', 'Data on individuals under 16 years old', 'Racial or ethnic origin', 'Political opinions', 'Religious or philosophical beliefs', 'Trade union membership', 'Sex life or orientation' ] },
-            { id: 'contact_info', title: 'Your Report', prompt: 'Where should we send your report?', explanation: 'Enter your details below to receive your personalized compliance snapshot.', type: 'contact' }
-        ];
-        let currentStep = 0;
-        const userAnswers = {};
-        const stepIndicator = document.getElementById('step-indicator');
-        const appContent = document.getElementById('app-content');
-        const welcomeScreen = document.getElementById('step-0');
-        const questionsContainer = document.getElementById('questions-container');
-        const loadingScreen = document.getElementById('loading-screen');
-        const resultsScreen = document.getElementById('results-screen');
-        const navButtons = document.getElementById('nav-buttons');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const submitBtn = document.getElementById('submit-btn');
-        const errorMessageContainer = document.getElementById('error-message-container');
+        console.log("Script started executing."); // Debug: Script started
 
-        function initialize() {
-            let indicatorHTML = '';
-            questions.forEach((q, index) => {
-                indicatorHTML += `${index > 0 ? '<div class="flex-auto border-t-2 step-inactive mx-4"></div>' : ''}<div id="indicator-${index + 1}" class="step-indicator-item flex items-center step-inactive"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-bold">${index + 1}</div><span class="hidden md:block ml-3 font-semibold">${q.title}</span></div>`;
-            });
-            stepIndicator.innerHTML = indicatorHTML;
-            
-            let questionsHTML = '';
-            questions.forEach((q, index) => {
-                questionsHTML += `<div id="step-${index + 1}" class="hidden fade-in" data-step="${index + 1}"><h3 class="text-xl font-semibold text-gray-800 mb-2">${q.prompt}</h3>`;
-                if(q.explanation) questionsHTML += `<p class="text-gray-500 mb-6">${q.explanation}</p>`;
-                else questionsHTML += `<div class="mb-6"></div>`;
-                questionsHTML += `<div class="space-y-4">`;
-                if (q.type === 'select') {
-                    questionsHTML += `<select id="${q.id}" class="w-full p-3 border border-gray-300 rounded-lg appearance-none form-select"><option value="" disabled selected>Please select an option...</option>`;
-                    q.options.forEach(opt => { questionsHTML += `<option value="${opt}">${opt}</option>`; });
-                    questionsHTML += `</select>`;
-                } else if (q.type === 'checkbox') {
-                    q.options.forEach((opt, i) => { questionsHTML += `<label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 rounded border-gray-300"><span class="ml-3 text-gray-700">${opt}</span></label>`; });
-                } else if (q.type === 'radio') {
-                    q.options.forEach((opt, i) => { questionsHTML += `<label for="${q.id}-${i}" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="radio" id="${q.id}-${i}" name="${q.id}" value="${opt}" class="h-5 w-5 border-gray-300"><span class="ml-3 text-gray-700">${opt}</span></label>`; });
-                } else if (q.type === 'contact') {
-                    questionsHTML += `<div><label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label><input type="text" id="full_name" name="full_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div><div><label for="company_name" class="block text-sm font-medium text-gray-700">Company Name</label><input type="text" id="company_name" name="company_name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div><div><label for="work_email" class="block text-sm font-medium text-gray-700">Work Email</label><input type="email" id="work_email" name="work_email" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm form-input"></div>`;
-                }
-                questionsHTML += `</div></div>`;
-            });
-            questionsContainer.innerHTML = questionsHTML;
-            updateUI();
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM fully loaded and parsed. Initializing app."); // Debug: DOM loaded
 
-        function updateUI() {
-            if (currentStep > 0) questionsContainer.classList.remove('hidden');
-            else questionsContainer.classList.add('hidden');
-            for (let i = 0; i <= questions.length; i++) {
-                const stepEl = document.getElementById(`step-${i}`);
-                if (stepEl) stepEl.classList.add('hidden');
-            }
-            const currentStepEl = document.getElementById(`step-${currentStep}`);
-            if (currentStepEl) currentStepEl.classList.remove('hidden');
-            if (currentStep === 0) navButtons.classList.add('hidden');
-            else {
-                navButtons.classList.remove('hidden');
-                prevBtn.style.visibility = currentStep > 1 ? 'visible' : 'hidden';
-                nextBtn.style.display = currentStep < questions.length ? 'block' : 'none';
-                submitBtn.style.display = currentStep === questions.length ? 'block' : 'none';
-            }
-            for (let i = 1; i <= questions.length; i++) {
-                const indicator = document.getElementById(`indicator-${i}`);
-                if (!indicator) continue;
-                const indicatorCircle = indicator.querySelector('div');
-                const indicatorLine = indicator.previousElementSibling;
-                indicatorCircle.classList.remove('step-active', 'step-complete', 'step-inactive');
-                if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.remove('step-active', 'step-complete', 'step-inactive');
-                if (i < currentStep) {
-                    indicatorCircle.classList.add('step-complete');
-                    indicatorCircle.innerHTML = '&#10003;';
-                    if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-complete');
-                } else if (i === currentStep) {
-                    indicatorCircle.classList.add('step-active');
-                    indicatorCircle.innerHTML = i;
-                    if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-inactive');
-                } else {
-                    indicatorCircle.classList.add('step-inactive');
-                    indicatorCircle.innerHTML = i;
-                    if (indicatorLine && indicatorLine.classList.contains('border-t-2')) indicatorLine.classList.add('step-inactive');
-                }
-            }
-        }
-
-        function saveAnswer() {
-            if (currentStep > 0 && currentStep <= questions.length) {
-                const question = questions[currentStep - 1];
-                if (question.type === 'select') userAnswers[question.id] = document.getElementById(question.id).value;
-                else if (question.type === 'checkbox') userAnswers[question.id] = Array.from(document.querySelectorAll(`input[name=${question.id}]:checked`)).map(el => el.value);
-                else if (question.type === 'radio') {
-                    const checked = document.querySelector(`input[name=${question.id}]:checked`);
-                    if (checked) userAnswers[question.id] = checked.value;
-                } else if (question.type === 'contact') {
-                    userAnswers['full_name'] = document.getElementById('full_name').value;
-                    userAnswers['company_name'] = document.getElementById('company_name').value;
-                    userAnswers['work_email'] = document.getElementById('work_email').value;
-                }
-            }
-        }
-        
-        function validateStep(step) {
-            if (step > 0 && step < questions.length) { 
-                const question = questions[step - 1];
-                if (question.type === 'checkbox') {
-                    if (document.querySelectorAll(`input[name=${question.id}]:checked`).length === 0) {
-                        showError('Please make at least one selection to continue.');
-                        return false;
-                    }
-                } else if (question.type === 'select') {
-                    if (document.getElementById(question.id).value === "") {
-                        showError('Please select an option to continue.');
-                        return false;
-                    }
-                } else if (question.type === 'radio') {
-                    if (!document.querySelector(`input[name=${question.id}]:checked`)) {
-                        showError('Please select an option to continue.');
-                        return false;
-                    }
-                }
-            }
-            clearError(); 
-            return true;
-        }
-
-        function nextStep() {
-            if (!validateStep(currentStep)) return; 
-            saveAnswer();
-            if (currentStep < questions.length) {
-                currentStep++;
-                updateUI();
-            }
-        }
-
-        function prevStep() {
-            if (currentStep > 1) {
-                currentStep--;
-                clearError(); 
-                updateUI();
-            }
-        }
-        
-        function restart() {
-            currentStep = 0;
-            for (const key in userAnswers) delete userAnswers[key];
-            welcomeScreen.classList.remove('hidden');
-            questionsContainer.classList.add('hidden');
-            loadingScreen.classList.add('hidden');
-            resultsScreen.classList.add('hidden');
-            navButtons.classList.add('hidden');
-            errorMessageContainer.innerHTML = '';
-            initialize(); 
-        }
-        
-        function validateContactForm() {
-            const name = document.getElementById('full_name').value.trim();
-            const company = document.getElementById('company_name').value.trim();
-            const email = document.getElementById('work_email').value.trim();
-            if (name === '' || email === '' || company === '') {
-                showError('Please fill out all fields to get your report.');
-                return false;
-            }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('Please enter a valid email address.');
-                return false;
-            }
-            clearError();
-            return true;
-        }
-
-        function showError(message) {
-            errorMessageContainer.innerHTML = `<p class="error-message" style="display: block;">${message}</p>`;
-        }
-
-        function clearError() {
-            errorMessageContainer.innerHTML = '';
-        }
-
-        async function getReport() {
-            if (!validateContactForm()) return;
-            saveAnswer();
-            
-            questionsContainer.parentElement.classList.add('hidden');
-            navButtons.classList.add('hidden');
-            stepIndicator.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
-            
-            const errorText = `<div class="text-left"><h3>Error</h3><p>Sorry, an error occurred while generating your report. This could be a temporary network issue. Please try again in a few moments.</p></div>`;
+            // --- Configuration: Your Zapier Webhook URL ---
+            const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/21168350/u2yjtw7/'; // Your specific Zapier Webhook URL
 
             try {
-                const apiUrl = `/.netlify/functions/get-report`;
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userAnswers)
-                });
+                // DOM Elements
+                const formIntro = document.querySelector('.form-intro');
+                const regulationFormContainer = document.getElementById('regulationFormContainer');
+                const startAnalysisButton = document.getElementById('startAnalysisButton');
+                const formSteps = document.querySelectorAll('.form-step');
+                const resultsSection = document.getElementById('results-section');
+                const reportBusinessNameSpan = document.getElementById('reportBusinessName');
+                const reportEmailAddressStrong = document.getElementById('reportEmailAddress');
+                const regulationsOutput = document.getElementById('regulationsOutput');
+                const emailReportLink = document.getElementById('emailReportLink');
+                const startOverButton = document.getElementById('startOverButton');
+                const generateReportButton = document.getElementById('generateReportButton');
+                // Removed the separate "Next steps" button variable here because it's now a link inside a div
+                // const nextStepsButton = document.getElementById('nextStepsButton'); // This is no longer needed as a JS variable since it's a direct HTML link
+                // The new action button in the results page
+                const uncoverFullRiskButton = resultsSection.querySelector('.next-steps-section .action-button');
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Server error: ${response.status}`);
+
+                let currentStep = 0;
+                const totalSteps = formSteps.length;
+
+                // --- Regulatory Data Definition (with Base Scores and Priority) ---
+                const regulationsData = [
+                    {
+                        name: "GDPR (General Data Protection Regulation)",
+                        description: "A comprehensive data privacy law protecting individuals within the European Union and European Economic Area. It applies to any organization, regardless of its location, that processes personal data of EU residents.",
+                        conditions: {
+                            customerLocation: ['european_union'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 100,
+                        priority: 1
+                    },
+                    {
+                        name: "UK GDPR (General Data Protection Regulation)",
+                        description: "A comprehensive data privacy law protecting individuals within the United Kingdom. It applies to any organization in or targeting individuals in the UK.",
+                        conditions: {
+                            customerLocation: ['united_kingdom'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 100,
+                        priority: 3
+                    },
+                    {
+                        name: "ePrivacy Directive",
+                        description: "ePrivacy refers to a set of laws and regulations, most notably the ePrivacy Directive in the EU, that aim to protect the privacy of electronic communications and user data online, particularly concerning cookies, direct marketing, and confidentiality of communications. It applies to any organization, regardless of its location, that processes personal data of EU residents.",
+                        conditions: {
+                            customerLocation: ['european_union'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 42,
+                        priority: 4
+                    },
+                    {
+                        name: "Privacy & Electronic Communications Regulations (PECR)",
+                        description: "The UK's national implementation of the original EU ePrivacy Directive. ePrivacy refers to a set of laws and regulations, that aim to protect the privacy of electronic communications and user data online, particularly concerning cookies, direct marketing, and confidentiality of communications. It applies to any organization, regardless of its location, that processes personal data of UK residents.",
+                        conditions: {
+                            customerLocation: ['united_kingdom'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 42,
+                        priority: 5
+                    },
+                    {
+                        name: "Data Protection Act of 2018",
+                        description: "A regulation that complements the UK GDPR and grants individuals rights regarding their personal data. It applies to any organization in or targeting individuals in the UK.",
+                        conditions: {
+                            customerLocation: ['united_kingdom'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 49,
+                        priority: 6
+                    },
+                    {
+                        name: "CCPA (California Consumer Privacy Act)",
+                        description: "The California Consumer Privacy Act grants California consumers specific rights regarding their personal information collected by businesses, including the right to know, delete, and opt-out of the sale of their data. For businesses that meet specific thresholds (e.g., revenue, data processing volume).",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            annualRevenue: ['1M+', '750k-999k', '500k-749k', '250k-499k', '1-249k'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 56,
+                        priority: 7
+                    },
+                    {
+                        name: "CAN-SPAM",
+                        description: "The Controlling the Assault of Non-Solicited Pornography And Marketing Act of 2003 establishes national standards for the sending of commercial emails, primarily requiring accurate sender information, clear identification of advertisements, and an easy opt-out mechanism.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 20,
+                        priority: 8
+                    },
+                    {
+                        name: "VPPA (Video Privacy Protection Act)",
+                        description: "The Video Privacy Protection Act prohibits video tape service providers from knowingly disclosing personally identifiable information about a consumer's video rentals without their informed, written consent.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 12,
+                        priority: 9
+                    },
+                    {
+                        name: "HIPAA (Health Insurance Portability and Accountability Act)",
+                        description: "A U.S. law protecting sensitive patient health information from being disclosed without the patient's consent or knowledge. Applies primarily to healthcare providers, health plans, and healthcare clearinghouses.",
+                        conditions: {
+                            industry: ['healthcare'],
+                            customerLocation: ['united_states'],
+                            dataType: ['health_phi']
+                        },
+                        baseScore: 64,
+                        priority: 10
+                    },
+                    {
+                        name: "CIPA (Children's Internet Protection Act)",
+                        description: "The Children's Internet Protection Act requires schools and libraries that receive federal funding for internet access to implement internet safety policies, including technology protection measures to block or filter obscene or harmful content for minors.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            industry: ['education']
+                        },
+                        baseScore: 6,
+                        priority: 11
+                    },
+                    {
+                        name: "TCPA (Telephone Consumer Protection Act)",
+                        description: "The Telephone Consumer Protection Act restricts telemarketing calls, automatic telephone dialing systems, and artificial or prerecorded voice messages, requiring prior consent for many types of calls and texts.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                        },
+                        baseScore: 56,
+                        priority: 12
+                    },
+                    {
+                        name: "GLBA (Gramm-Leach-Bliley Act)",
+                        description: "The Gramm-Leach-Bliley Act requires financial institutions to explain their information-sharing practices to customers and to safeguard sensitive data, covering privacy, security, and pretexting rules.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['financial']
+                        },
+                        baseScore: 25,
+                        priority: 13
+                    },
+                    {
+                        name: "COPPA (Children's Online Privacy Protection Act)",
+                        description: "The Children's Online Privacy Protection Act imposes requirements on operators of websites or online services directed at children under 13, or that knowingly collect personal information from children under 13, to obtain verifiable parental consent.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['under_16']
+                        },
+                        baseScore: 81,
+                        priority: 14
+                    },
+                    {
+                        name: "BIPA (Illinois Biometric Information Privacy Act)",
+                        description: "The Illinois Biometric Information Privacy Act requires private entities to obtain written consent before collecting, capturing, purchasing, receiving, or otherwise obtaining a person's biometric identifiers or biometric information, and places restrictions on the storage, use, and disclosure of such data.",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            customerType: ['consumers', 'businesses', 'both'],
+                            dataType: ['biometrics']
+                        },
+                        baseScore: 81,
+                        priority: 15
+                    },
+                    {
+                        name: "Federal Trade Commission (FTC)",
+                        description: "The FTC serves as the primary federal agency protecting consumer privacy in the United States by prohibiting unfair or deceptive acts and practices, especially concerning how companies collect, use, and secure personal data across various industries (excluding certain regulated sectors).",
+                        conditions: {
+                            customerLocation: ['united_states']
+                        },
+                        baseScore: 30,
+                        priority: 16
+                    },
+                    {
+                        name: "Federal Communications Commission (FCC)",
+                        description: "The FCC primarily focuses on protecting consumer privacy within the telecommunications sector, setting rules for how phone companies, internet service providers, and other communication service providers handle sensitive customer data like Customer Proprietary Network Information (CPNI).",
+                        conditions: {
+                            customerLocation: ['united_states'],
+                            industry: ['technology', 'healthcare', 'ecommerce', 'financial_services', 'marketing_advertising', 'education', 'other_industry']
+                        },
+                        baseScore: 28,
+                        priority: 17
+                    }
+                ];
+
+                // --- Coefficients Data ---
+                const coefficientsData = {
+                    companySize: {
+                        '51-250': 1.4,
+                        '251-1000': 1.6,
+                        'over_1000': 2
+                    },
+                    industry: {
+                        'technology': 1.8,
+                        'healthcare': 2,
+                        'ecommerce': 1.2,
+                        'financial_services': 1.6,
+                        'marketing_advertising': 1.4,
+                        'education': 0.8
+                    },
+                    // dataType is commented out as it has no coefficients yet
+                };
+
+                // --- Step Navigation Functions ---
+                function showStep(stepIndex) {
+                    formSteps.forEach((step, index) => {
+                        if (index === stepIndex) {
+                            step.classList.add('active');
+                        } else {
+                            step.classList.remove('active');
+                        }
+                    });
+                    currentStep = stepIndex;
                 }
 
-                const result = await response.json();
-                displayResults(result.report);
+                // Function to validate the current step's inputs
+                function validateStep(stepIndex) {
+                    let isValid = true;
+                    const currentStepElement = formSteps[stepIndex];
 
-            } catch (error) {
-                console.error("Error in getReport:", error);
-                displayResults(errorText);
+                    // 1. Validate text/email/select inputs with 'required' attribute
+                    const requiredInputs = currentStepElement.querySelectorAll('input[required]:not([type="radio"]):not([type="checkbox"]), select[required], textarea[required]');
+                    requiredInputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            input.style.borderColor = 'red';
+                            isValid = false;
+                        } else {
+                            input.style.borderColor = '#ddd';
+                        }
+                    });
+
+                    // 2. Validate Radio button groups
+                    const radioGroups = currentStepElement.querySelectorAll('.radio-group[data-group-name]');
+                    radioGroups.forEach(group => {
+                        const groupName = group.dataset.groupName;
+                        const radiosInGroup = currentStepElement.querySelectorAll(`input[name="${groupName}"]`);
+                        const isChecked = Array.from(radiosInGroup).some(radio => radio.checked);
+
+                        if (!isChecked) {
+                            group.classList.add('invalid-group-border');
+                            isValid = false;
+                        } else {
+                            group.classList.remove('invalid-group-border');
+                        }
+                    });
+
+                    // 3. Validate Checkbox groups
+                    const checkboxGroups = currentStepElement.querySelectorAll('.checkbox-group[data-group-name]');
+                    checkboxGroups.forEach(group => {
+                        const groupName = group.dataset.groupName;
+                        const checkboxesInGroup = currentStepElement.querySelectorAll(`input[name="${groupName}"]`);
+                        const isChecked = Array.from(checkboxesInGroup).some(checkbox => checkbox.checked);
+
+                        if (!isChecked) {
+                            group.classList.add('invalid-group-border');
+                            isValid = false;
+                        } else {
+                            group.classList.remove('invalid-group-border');
+                        }
+                    });
+
+                    return isValid;
+                }
+
+                // --- Event Listeners ---
+
+                // 1. "Start Analysis" Button Click
+                startAnalysisButton.addEventListener('click', function() {
+                    console.log("Start Analysis button clicked. Transitioning to form."); // Debug Log
+                    formIntro.style.display = 'none'; // Hide the intro section
+                    regulationFormContainer.style.display = 'block'; // Show the form container
+                    showStep(0); // Show the very first step of the form (Step 1 - Industry)
+                });
+
+                // 2. "Next" Buttons
+                document.getElementById('nextStep1').addEventListener('click', function() {
+                    if (validateStep(0)) { showStep(1); } else { alert('Please complete all required fields in this section to proceed.'); }
+                });
+                document.getElementById('nextStep2').addEventListener('click', function() {
+                    if (validateStep(1)) { showStep(2); } else { alert('Please complete all required fields in this section to proceed.'); }
+                });
+                document.getElementById('nextStep3').addEventListener('click', function() {
+                    if (validateStep(2)) { showStep(3); } else { alert('Please complete all required fields in this section to proceed.'); }
+                });
+                document.getElementById('nextStep4').addEventListener('click', function() {
+                    if (validateStep(3)) { showStep(4); } else { alert('Please complete all required fields in this section to proceed.'); }
+                });
+
+                // 3. "Previous" Buttons
+                document.getElementById('prevStep2').addEventListener('click', function() { showStep(0); });
+                document.getElementById('prevStep3').addEventListener('click', function() { showStep(1); });
+                document.getElementById('prevStep4').addEventListener('click', function() { showStep(2); });
+                document.getElementById('prevStep5').addEventListener('click', function() { showStep(3); });
+
+
+                // --- Generate Report Function ---
+                let finalApplicableRegulations = []; // Holds regulations with calculated scores for this report
+
+                function generateReport(formData) {
+                    let reportHtml = '';
+                    finalApplicableRegulations = []; // Reset for each new report
+
+                    // Calculate overallCoefficient based on user's selected answers
+                    let overallCoefficient = 1;
+                    for (const category in coefficientsData) {
+                        if (Object.hasOwnProperty.call(coefficientsData, category)) {
+                            const userSelection = formData[category];
+
+                            if (userSelection) { // Only process if user actually selected something for this category
+                                if (Array.isArray(userSelection)) { // For multi-select checkboxes (e.g., customerLocation, dataType)
+                                    // For the user's specific input, we still multiply all SELECTED coefficients
+                                    userSelection.forEach(selectedVal => {
+                                        if (coefficientsData[category][selectedVal]) {
+                                            overallCoefficient *= coefficientsData[category][selectedVal];
+                                        }
+                                    });
+                                } else { // For single-select radios (e.g., industry, companySize, annualRevenue, customerType)
+                                    if (coefficientsData[category][userSelection]) {
+                                        overallCoefficient *= coefficientsData[category][userSelection];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    console.log("User's Overall Coefficient:", overallCoefficient); // For debugging
+
+
+                    // Determine applicable regulations and calculate their scores
+                    regulationsData.forEach(regulation => {
+                        let applies = true; // Assume it applies until a condition fails
+
+                        // Check each condition for the current regulation
+                        for (const conditionKey in regulation.conditions) {
+                            const requiredValues = regulation.conditions[conditionKey];
+                            const userValues = formData[conditionKey];
+
+                            // CRITICAL LOGGING FOR DEBUGGING
+                            console.log(`\nRegulation: ${regulation.name}`);
+                            console.log(`  Checking condition: ${conditionKey}`);
+                            console.log(`    Required values for this condition:`, requiredValues);
+                            console.log(`    User's input for this condition:`, userValues);
+
+                            // Condition: User input is missing or empty for a required condition
+                            if (userValues === null || userValues === undefined || (Array.isArray(userValues) && userValues.length === 0) || (typeof userValues === 'string' && userValues.trim() === '')) {
+                                console.log(`    FAIL: User input for required condition '${conditionKey}' is missing or empty.`);
+                                applies = false;
+                                break;
+                            }
+
+                            // Condition: Check if user's selection matches required values
+                            if (Array.isArray(userValues)) { // User input is an array (checkboxes, e.g., customerLocation, dataType)
+                                // For multi-selects, check if AT LEAST ONE required value is present in user's selection
+                                const hasIntersection = requiredValues.some(reqVal => userValues.includes(reqVal));
+                                if (!hasIntersection) {
+                                    console.log(`    FAIL: No overlap found between user's selected '${conditionKey}' and required values.`);
+                                    applies = false;
+                                    break;
+                                } else {
+                                    console.log(`    PASS: Overlap found for '${conditionKey}'.`);
+                                }
+                            } else { // User input is a single value (radio, select, text, e.g., industry, companySize, customerType, annualRevenue)
+                                // For single-selects, check if the user's selected value is among the required values
+                                if (!requiredValues.includes(userValues)) {
+                                    console.log(`    FAIL: User's selected '${conditionKey}' ('${userValues}') is not among required values:`, requiredValues);
+                                    applies = false;
+                                    break;
+                                } else {
+                                    console.log(`    PASS: User's selected '${conditionKey}' ('${userValues}') is among required values.`);
+                                }
+                            }
+                        } // End for (conditionKey in regulation.conditions)
+
+                        if (applies) {
+                            console.log(`=> Regulation APPLIES: ${regulation.name}`);
+                            const calculatedRiskScore = (regulation.baseScore * overallCoefficient).toFixed(0);
+
+                            finalApplicableRegulations.push({
+                                ...regulation,
+                                calculatedRiskScore: parseInt(calculatedRiskScore)
+                            });
+                        } else {
+                            console.log(`=> Regulation DOES NOT APPLY: ${regulation.name}`);
+                        }
+                    }); // End regulationsData.forEach
+
+                    // Sort applicable regulations by priority
+                    finalApplicableRegulations.sort((a, b) => a.priority - b.priority);
+
+                    if (finalApplicableRegulations.length > 0) {
+                        reportHtml += ''; // Removed the intro text here
+                        finalApplicableRegulations.forEach(reg => {
+                            let scoreClass = '';
+                            if (reg.calculatedRiskScore <= 25) {
+                                scoreClass = 'risk-low';
+                            } else if (reg.calculatedRiskScore <= 50) {
+                                scoreClass = 'risk-medium';
+                            } else {
+                                scoreClass = 'risk-high';
+                            }
+
+                            reportHtml += `
+                                <div class="regulation-item">
+                                    <h3>${reg.name}</h3>
+                                    <p>${reg.description}</p>
+                                    <p><strong>Your estimated risk score (out of 100):</strong> <span class="risk-score-value ${scoreClass}">${reg.calculatedRiskScore}</span></p>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        reportHtml = '<p>Based on your input, we did not find any specific regulations from our current list that explicitly apply. Please remember this tool provides informational guidance only and is not legal advice. Always consult with a legal professional for comprehensive compliance advice.</p>';
+                    }
+
+                    return reportHtml;
+                }
+
+                // --- Form Submission (Generate Report Button) ---
+                generateReportButton.addEventListener('click', async function(event) {
+                    console.log("Generate Report button clicked."); // Debug Log
+
+                    if (!validateStep(totalSteps - 1)) {
+                        alert('Please complete all required fields to generate the report.');
+                        return;
+                    }
+
+                    // Collect all form data manually
+                    const formData = {
+                        industry: document.querySelector('input[name="industry"]:checked')?.value || '',
+                        companySize: document.querySelector('input[name="companySize"]:checked')?.value || '',
+                        annualRevenue: document.querySelector('input[name="annualRevenue']:checked')?.value || '',
+                        customerLocation: Array.from(document.querySelectorAll('input[name="customerLocation"]:checked')).map(cb => cb.value),
+                        customerType: document.querySelector('input[name="customerType"]:checked')?.value || '',
+                        dataType: Array.from(document.querySelectorAll('input[name="dataType']:checked')).map(cb => cb.value),
+                        fullName: document.getElementById('fullName').value.trim(),
+                        businessName: document.getElementById('businessName').value.trim(),
+                        yourEmail: document.getElementById('yourEmail').value.trim()
+                    };
+                    console.log("Collected formData:", formData); // Debug Log
+
+
+                    // --- Generate Report ---
+                    const reportContentHtml = generateReport(formData);
+                    regulationsOutput.innerHTML = reportContentHtml;
+
+                    // Update results section with user's business name and email
+                    reportBusinessNameSpan.textContent = formData.businessName;
+                    reportEmailAddressStrong.textContent = formData.yourEmail;
+
+                    // Hide the form container and show the results
+                    regulationFormContainer.style.display = 'none';
+                    resultsSection.style.display = 'block';
+                    console.log("Report displayed on site."); // Debug Log
+
+                    // --- Send Data to Zapier Webhook (using URLSearchParams) ---
+                    const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/21168350/u2yjtw7/'; // Your specific Zapier Webhook URL
+
+                    // Prepare data for URL-encoded format
+                    const flattenedDataToSend = {
+                        timestamp: new Date().toISOString(),
+                        industry: formData.industry,
+                        companySize: formData.companySize,
+                        annualRevenue: formData.annualRevenue,
+                        customerType: formData.customerType,
+                        fullName: formData.fullName,
+                        businessName: formData.businessName,
+                        yourEmail: formData.yourEmail,
+                        customerLocation: formData.customerLocation.join(', '),
+                        dataType: formData.dataType.join(', '),
+                        generatedReportHtml: reportContentHtml,
+                        generatedReportPlainText: finalApplicableRegulations.length > 0 ?
+                            "Applicable Regulations (Calculated Risk Score):\n\n" +
+                            finalApplicableRegulations.map(reg => `${reg.name}: ${reg.description}\nYour estimated risk score (out of 100): ${reg.calculatedRiskScore}`).join('\n\n') :
+                            'No specific regulations found based on your input.'
+                    };
+                    console.log("Data prepared for Zapier (URL-encoded):", flattenedDataToSend); // Debug Log
+
+                    try {
+                        const response = await fetch(ZAPIER_WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                            },
+                            body: new URLSearchParams(flattenedDataToSend).toString()
+                        });
+
+                        if (response.ok) {
+                            console.log('Data successfully sent to Zapier (URL-encoded)! Response OK.'); // Debug Log
+                        } else {
+                            console.error('Failed to send data to Zapier:', response.status, response.statusText); // Debug Log
+                        }
+                    } catch (error) {
+                        console.error('Error sending data to Zapier:', error); // Debug Log
+                    }
+
+                    // --- Mailto Link for User's Copy ---
+                    const reportPlainTextEmail = `
+Dear ${formData.fullName || formData.businessName},
+
+Here is your customized Business Regulation Report based on the information you provided:
+
+Business Name: ${formData.businessName}
+Your Email: ${formData.yourEmail}
+Industry: ${formData.industry}
+Company Size: ${formData.companySize}
+Annual Revenue: ${formData.annualRevenue}
+Customer Locations: ${formData.customerLocation.length > 0 ? formData.customerLocation.join(', ') : 'N/A'}
+Customer Type: ${formData.customerType}
+Data Types Collected: ${formData.dataType.length > 0 ? formData.dataType.join(', ') : 'N/A'}
+
+--- Applicable Regulations ---
+
+${finalApplicableRegulations.length > 0 ? finalApplicableRegulations.map(reg => `${reg.name}: ${reg.description}\nYour estimated risk score (out of 100): ${reg.calculatedRiskScore}`).join('\n\n') : 'No specific regulations found based on your input.'}
+
+---
+
+Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.
+
+Best regards,
+[Your Business Name/Signature]
+                `.trim();
+
+                    const emailSubject = encodeURIComponent(`Your Business Regulation Report for ${formData.businessName}`);
+                    const emailBody = encodeURIComponent(reportPlainTextEmail);
+
+                    emailReportLink.href = `mailto:${formData.yourEmail}?subject=${emailSubject}&body=${emailBody}`;
+                    emailReportLink.style.display = 'block';
+                    console.log("Mailto link prepared."); // Debug Log
+                });
+
+                // 5. "Start Over" Button
+                startOverButton.addEventListener('click', function() {
+                    console.log("Start Over button clicked. Resetting form."); // Debug Log
+                    resultsSection.style.display = 'none';
+                    formIntro.style.display = 'block';
+
+                    // Manual reset for all form inputs
+                    document.getElementById('fullName').value = '';
+                    document.getElementById('businessName').value = '';
+                    document.getElementById('yourEmail').value = '';
+                    
+                    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+                    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+
+                    // Remove any invalid borders
+                    document.querySelectorAll('.invalid-group-border').forEach(el => el.classList.remove('invalid-group-border'));
+                    document.querySelectorAll('input[type="text"], input[type="email"], select').forEach(input => input.style.borderColor = '#ddd');
+                    regulationsOutput.innerHTML = '';
+
+                    emailReportLink.style.display = 'none';
+                    emailReportLink.href = '#';
+
+                    regulationFormContainer.style.display = 'none';
+                    currentStep = 0;
+                    console.log("Form reset complete."); // Debug Log
+                });
+
+                // Add event listener for the new "Next steps" button
+                nextStepsButton.addEventListener('click', function() {
+                    console.log("Next steps button clicked. Opening contact page."); // Debug Log
+                    window.open('https://www.aetos-data.com/services/p/compliance-snapshot-expert-review', '_blank'); // Updated URL
+                });
+
+                // Initial setup: Ensure only the intro is visible at page load
+                formIntro.style.display = 'block';
+                regulationFormContainer.style.display = 'none';
+                resultsSection.style.display = 'none';
+                console.log("Initial display states set."); // Debug Log
+
+            } catch (e) {
+                console.error("An error occurred during app initialization or execution:", e); // Catch any unexpected errors
+                alert("An unexpected error occurred. Please refresh the page. Details logged to console.");
             }
-        }
-
-        function displayResults(reportContent) {
-            let html = reportContent;
-            if (reportContent && !reportContent.startsWith('<div')) {
-                 html = reportContent
-                    .replace(/^### (.*$)/gim, '<h3 class="font-bold text-lg mb-2 mt-4">$1</h3>')
-                    .replace(/^## (.*$)/gim, '<h2 class="font-bold text-xl mb-3 mt-5">$1</h2>')
-                    .replace(/^# (.*$)/gim, '<h1 class="font-bold text-2xl mb-4">$1</h1>')
-                    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                    .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                    .replace(/^\* (.*$)/gim, '<ul><li class="list-disc list-inside ml-4 mb-2">$1</li></ul>')
-                    .replace(/<\/ul>\s?<ul>/gim, '')
-                    .replace(/\n/g, '<br>');
-            } else if (!reportContent) {
-                html = `<div class="text-left"><h3>Analysis Complete</h3><p>Our AI was unable to generate a detailed report for this specific profile. This can sometimes happen with unique or highly specialized business types.</p></div>`;
-            }
-
-            document.getElementById('results-content').innerHTML = html;
-            loadingScreen.classList.add('hidden');
-            resultsScreen.classList.remove('hidden');
-        }
-
-        window.onload = initialize;
+        });
     </script>
+
 </body>
 </html>
