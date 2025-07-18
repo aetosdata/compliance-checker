@@ -147,33 +147,6 @@
         .risk-high {
             color: #dc3545; /* Red */
         }
-
-        /* NEW: Styles for next steps section */
-        .next-steps-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            text-align: center;
-        }
-        .next-steps-section h3 {
-            color: #447073;
-            margin-bottom: 15px;
-        }
-        .next-steps-section .action-button {
-            display: inline-block;
-            margin: 10px;
-            padding: 15px 25px;
-            background-color: #447073;
-            color: #e4e4e4;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-        }
-        .next-steps-section .action-button:hover {
-            background-color: #315052;
-        }
     </style>
 </head>
 <body>
@@ -184,8 +157,7 @@
             <p>Let's be honest: terms like 'GDPR' and 'CCPA' are enough to make any business owner's head spin. You know data compliance is important, but figuring out what actually applies to&nbsp;you&nbsp;can feel like trying to put together a puzzle in the dark.</p>
             <p>Consider this your flashlight. This brief check-up will help illuminate your potential obligations. By answering a few questions, you'll get a personalized snapshot that translates regulatory jargon into a practical starting point.</p>
             <p class="disclaimer">Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.</p>
-            <button type="button" id="startAnalysisButton">Start Analysis</button>
-        </div>
+            <button type="button" id="startAnalysisButton" onclick="handleStartAnalysisClick()">Start Analysis</button> </div>
 
         <div id="regulationFormContainer" style="display: none;">
             <div class="form-step" data-step="1">
@@ -313,10 +285,33 @@
     </div>
 
     <script>
-        console.log("Script started executing."); // Debug: Script started
+        console.log("Script started executing: " + new Date().toLocaleString()); // Debug: Script started with timestamp
+
+        // Define handleStartAnalysisClick globally so it can be called by onclick attribute
+        function handleStartAnalysisClick() {
+            console.log("Start Analysis button clicked. Attempting transition to form."); // Debug Log
+            try {
+                const formIntro = document.querySelector('.form-intro');
+                const regulationFormContainer = document.getElementById('regulationFormContainer');
+                const formSteps = document.querySelectorAll('.form-step'); // Need to define this here too for showStep
+
+                if (formIntro && regulationFormContainer && formSteps.length > 0) {
+                    formIntro.style.display = 'none'; // Hide the intro section
+                    regulationFormContainer.style.display = 'block'; // Show the form container
+                    showStep(0); // Show the very first step of the form (Step 1 - Industry)
+                    console.log("Transition to form completed.");
+                } else {
+                    console.error("Critical: DOM elements not found for Start Analysis button's action.");
+                }
+            } catch (e) {
+                console.error("Error in handleStartAnalysisClick:", e);
+                alert("An error occurred starting the analysis. Please check the console.");
+            }
+        }
+
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM fully loaded and parsed. Initializing app."); // Debug: DOM loaded
+            console.log("DOM fully loaded and parsed. Initializing app. (Inside DOMContentLoaded)"); // Debug: DOM loaded
 
             // --- Configuration: Your Zapier Webhook URL ---
             const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/21168350/u2yjtw7/'; // Your specific Zapier Webhook URL
@@ -334,10 +329,16 @@
                 const emailReportLink = document.getElementById('emailReportLink');
                 const startOverButton = document.getElementById('startOverButton');
                 const generateReportButton = document.getElementById('generateReportButton');
-                // Removed the separate "Next steps" button variable here because it's now a link inside a div
-                // const nextStepsButton = document.getElementById('nextStepsButton'); // This is no longer needed as a JS variable since it's a direct HTML link
-                // The new action button in the results page
-                const uncoverFullRiskButton = resultsSection.querySelector('.next-steps-section .action-button');
+                const nextStepsButtonInResults = resultsSection.querySelector('.next-steps-section .action-button'); // Selecting the link
+
+                // Ensure all critical elements are found immediately
+                if (!formIntro || !regulationFormContainer || formSteps.length === 0 || !startAnalysisButton || !resultsSection || !generateReportButton) {
+                    console.error("FATAL ERROR: One or more critical DOM elements could not be found on DOMContentLoaded.");
+                    console.error("formIntro:", formIntro, "regulationFormContainer:", regulationFormContainer, "formSteps.length:", formSteps.length, "startAnalysisButton:", startAnalysisButton, "resultsSection:", resultsSection, "generateReportButton:", generateReportButton);
+                    alert("App failed to initialize. Please contact support and mention console errors.");
+                    return; // Stop further execution if critical elements are missing
+                }
+                console.log("All critical DOM elements found."); // Debug Log
 
 
                 let currentStep = 0;
@@ -601,14 +602,6 @@
 
                 // --- Event Listeners ---
 
-                // 1. "Start Analysis" Button Click
-                startAnalysisButton.addEventListener('click', function() {
-                    console.log("Start Analysis button clicked. Transitioning to form."); // Debug Log
-                    formIntro.style.display = 'none'; // Hide the intro section
-                    regulationFormContainer.style.display = 'block'; // Show the form container
-                    showStep(0); // Show the very first step of the form (Step 1 - Industry)
-                });
-
                 // 2. "Next" Buttons
                 document.getElementById('nextStep1').addEventListener('click', function() {
                     if (validateStep(0)) { showStep(1); } else { alert('Please complete all required fields in this section to proceed.'); }
@@ -763,7 +756,7 @@
                     const formData = {
                         industry: document.querySelector('input[name="industry"]:checked')?.value || '',
                         companySize: document.querySelector('input[name="companySize"]:checked')?.value || '',
-                        annualRevenue: document.querySelector('input[name="annualRevenue']:checked')?.value || '',
+                        annualRevenue: document.querySelector('input[name="annualRevenue"]:checked')?.value || '',
                         customerLocation: Array.from(document.querySelectorAll('input[name="customerLocation"]:checked')).map(cb => cb.value),
                         customerType: document.querySelector('input[name="customerType"]:checked')?.value || '',
                         dataType: Array.from(document.querySelectorAll('input[name="dataType']:checked')).map(cb => cb.value),
@@ -840,74 +833,4 @@ Industry: ${formData.industry}
 Company Size: ${formData.companySize}
 Annual Revenue: ${formData.annualRevenue}
 Customer Locations: ${formData.customerLocation.length > 0 ? formData.customerLocation.join(', ') : 'N/A'}
-Customer Type: ${formData.customerType}
-Data Types Collected: ${formData.dataType.length > 0 ? formData.dataType.join(', ') : 'N/A'}
-
---- Applicable Regulations ---
-
-${finalApplicableRegulations.length > 0 ? finalApplicableRegulations.map(reg => `${reg.name}: ${reg.description}\nYour estimated risk score (out of 100): ${reg.calculatedRiskScore}`).join('\n\n') : 'No specific regulations found based on your input.'}
-
----
-
-Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.
-
-Best regards,
-[Your Business Name/Signature]
-                `.trim();
-
-                    const emailSubject = encodeURIComponent(`Your Business Regulation Report for ${formData.businessName}`);
-                    const emailBody = encodeURIComponent(reportPlainTextEmail);
-
-                    emailReportLink.href = `mailto:${formData.yourEmail}?subject=${emailSubject}&body=${emailBody}`;
-                    emailReportLink.style.display = 'block';
-                    console.log("Mailto link prepared."); // Debug Log
-                });
-
-                // 5. "Start Over" Button
-                startOverButton.addEventListener('click', function() {
-                    console.log("Start Over button clicked. Resetting form."); // Debug Log
-                    resultsSection.style.display = 'none';
-                    formIntro.style.display = 'block';
-
-                    // Manual reset for all form inputs
-                    document.getElementById('fullName').value = '';
-                    document.getElementById('businessName').value = '';
-                    document.getElementById('yourEmail').value = '';
-                    
-                    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
-                    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
-
-                    // Remove any invalid borders
-                    document.querySelectorAll('.invalid-group-border').forEach(el => el.classList.remove('invalid-group-border'));
-                    document.querySelectorAll('input[type="text"], input[type="email"], select').forEach(input => input.style.borderColor = '#ddd');
-                    regulationsOutput.innerHTML = '';
-
-                    emailReportLink.style.display = 'none';
-                    emailReportLink.href = '#';
-
-                    regulationFormContainer.style.display = 'none';
-                    currentStep = 0;
-                    console.log("Form reset complete."); // Debug Log
-                });
-
-                // Add event listener for the new "Next steps" button
-                nextStepsButton.addEventListener('click', function() {
-                    console.log("Next steps button clicked. Opening contact page."); // Debug Log
-                    window.open('https://www.aetos-data.com/services/p/compliance-snapshot-expert-review', '_blank'); // Updated URL
-                });
-
-                // Initial setup: Ensure only the intro is visible at page load
-                formIntro.style.display = 'block';
-                regulationFormContainer.style.display = 'none';
-                resultsSection.style.display = 'none';
-                console.log("Initial display states set."); // Debug Log
-
-            } catch (e) {
-                console.error("An error occurred during app initialization or execution:", e); // Catch any unexpected errors
-                alert("An unexpected error occurred. Please refresh the page. Details logged to console.");
-            }
-        });
-    </script>
-
-</body>
-</html>
+Customer
