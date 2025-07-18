@@ -285,23 +285,229 @@
     </div>
 
     <script>
-        console.log("Script started executing: " + new Date().toLocaleString()); // Debug: Script started with timestamp
+        console.log("Script started executing (outside DOMContentLoaded): " + new Date().toLocaleString()); // Debug: Script started
 
-        // Define handleStartAnalysisClick globally so it can be called by onclick attribute
+        // --- Configuration: Your Zapier Webhook URL ---
+        const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/21168350/u2yjtw7/'; // Your specific Zapier Webhook URL
+
+        // --- GLOBAL VARIABLES (Accessible to onclick attributes) ---
+        let formIntro, regulationFormContainer, startAnalysisButton, formSteps, resultsSection, reportBusinessNameSpan,
+            reportEmailAddressStrong, regulationsOutput, emailReportLink, startOverButton, generateReportButton, nextStepsButtonInResults; // nextStepsButton changed to nextStepsButtonInResults
+        
+        let currentStep = 0;
+        let totalSteps = 0; // Will be set in initApp
+
+        // --- Regulatory Data Definition (etc.) - These can be global constants ---
+        const regulationsData = [
+            {
+                name: "GDPR (General Data Protection Regulation)",
+                description: "A comprehensive data privacy law protecting individuals within the European Union and European Economic Area. It applies to any organization, regardless of its location, that processes personal data of EU residents.",
+                conditions: {
+                    customerLocation: ['european_union'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 100,
+                priority: 1
+            },
+            {
+                name: "UK GDPR (General Data Protection Regulation)",
+                description: "A comprehensive data privacy law protecting individuals within the United Kingdom. It applies to any organization in or targeting individuals in the UK.",
+                conditions: {
+                    customerLocation: ['united_kingdom'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 100,
+                priority: 3
+            },
+            {
+                name: "ePrivacy Directive",
+                description: "ePrivacy refers to a set of laws and regulations, most notably the ePrivacy Directive in the EU, that aim to protect the privacy of electronic communications and user data online, particularly concerning cookies, direct marketing, and confidentiality of communications. It applies to any organization, regardless of its location, that processes personal data of EU residents.",
+                conditions: {
+                    customerLocation: ['european_union'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 42,
+                priority: 4
+            },
+            {
+                name: "Privacy & Electronic Communications Regulations (PECR)",
+                description: "The UK's national implementation of the original EU ePrivacy Directive. ePrivacy refers to a set of laws and regulations, that aim to protect the privacy of electronic communications and user data online, particularly concerning cookies, direct marketing, and confidentiality of communications. It applies to any organization, regardless of its location, that processes personal data of UK residents.",
+                conditions: {
+                    customerLocation: ['united_kingdom'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 42,
+                priority: 5
+            },
+            {
+                name: "Data Protection Act of 2018",
+                description: "A regulation that complements the UK GDPR and grants individuals rights regarding their personal data. It applies to any organization in or targeting individuals in the UK.",
+                conditions: {
+                    customerLocation: ['united_kingdom'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 49,
+                priority: 6
+            },
+            {
+                name: "CCPA (California Consumer Privacy Act)",
+                description: "The California Consumer Privacy Act grants California consumers specific rights regarding their personal information collected by businesses, including the right to know, delete, and opt-out of the sale of their data. For businesses that meet specific thresholds (e.g., revenue, data processing volume).",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    annualRevenue: ['1M+', '750k-999k', '500k-749k', '250k-499k', '1-249k'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 56,
+                priority: 7
+            },
+            {
+                name: "CAN-SPAM",
+                description: "The Controlling the Assault of Non-Solicited Pornography And Marketing Act of 2003 establishes national standards for the sending of commercial emails, primarily requiring accurate sender information, clear identification of advertisements, and an easy opt-out mechanism.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 20,
+                priority: 8
+            },
+            {
+                name: "VPPA (Video Privacy Protection Act)",
+                description: "The Video Privacy Protection Act prohibits video tape service providers from knowingly disclosing personally identifiable information about a consumer's video rentals without their informed, written consent.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 12,
+                priority: 9
+            },
+            {
+                name: "HIPAA (Health Insurance Portability and Accountability Act)",
+                description: "A U.S. law protecting sensitive patient health information from being disclosed without the patient's consent or knowledge. Applies primarily to healthcare providers, health plans, and healthcare clearinghouses.",
+                conditions: {
+                    industry: ['healthcare'],
+                    customerLocation: ['united_states'],
+                    dataType: ['health_phi']
+                },
+                baseScore: 64,
+                priority: 10
+            },
+            {
+                name: "CIPA (Children's Internet Protection Act)",
+                description: "The Children's Internet Protection Act requires schools and libraries that receive federal funding for internet access to implement internet safety policies, including technology protection measures to block or filter obscene or harmful content for minors.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    industry: ['education']
+                },
+                baseScore: 6,
+                priority: 11
+            },
+            {
+                name: "TCPA (Telephone Consumer Protection Act)",
+                description: "The Telephone Consumer Protection Act restricts telemarketing calls, automatic telephone dialing systems, and artificial or prerecorded voice messages, requiring prior consent for many types of calls and texts.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
+                },
+                baseScore: 56,
+                priority: 12
+            },
+            {
+                name: "GLBA (Gramm-Leach-Bliley Act)",
+                description: "The Gramm-Leach-Bliley Act requires financial institutions to explain their information-sharing practices to customers and to safeguard sensitive data, covering privacy, security, and pretexting rules.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['financial']
+                },
+                baseScore: 25,
+                priority: 13
+            },
+            {
+                name: "COPPA (Children's Online Privacy Protection Act)",
+                description: "The Children's Online Privacy Protection Act imposes requirements on operators of websites or online services directed at children under 13, or that knowingly collect personal information from children under 13, to obtain verifiable parental consent.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['under_16']
+                },
+                baseScore: 81,
+                priority: 14
+            },
+            {
+                name: "BIPA (Illinois Biometric Information Privacy Act)",
+                description: "The Illinois Biometric Information Privacy Act requires private entities to obtain written consent before collecting, capturing, purchasing, receiving, or otherwise obtaining a person's biometric identifiers or biometric information, and places restrictions on the storage, use, and disclosure of such data.",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    customerType: ['consumers', 'businesses', 'both'],
+                    dataType: ['biometrics']
+                },
+                baseScore: 81,
+                priority: 15
+            },
+            {
+                name: "Federal Trade Commission (FTC)",
+                description: "The FTC serves as the primary federal agency protecting consumer privacy in the United States by prohibiting unfair or deceptive acts and practices, especially concerning how companies collect, use, and secure personal data across various industries (excluding certain regulated sectors).",
+                conditions: {
+                    customerLocation: ['united_states']
+                },
+                baseScore: 30,
+                priority: 16
+            },
+            {
+                name: "Federal Communications Commission (FCC)",
+                description: "The FCC primarily focuses on protecting consumer privacy within the telecommunications sector, setting rules for how phone companies, internet service providers, and other communication service providers handle sensitive customer data like Customer Proprietary Network Information (CPNI).",
+                conditions: {
+                    customerLocation: ['united_states'],
+                    industry: ['technology', 'healthcare', 'ecommerce', 'financial_services', 'marketing_advertising', 'education', 'other_industry']
+                },
+                baseScore: 28,
+                priority: 17
+            }
+        ];
+
+        // --- Coefficients Data ---
+        const coefficientsData = {
+            companySize: {
+                '51-250': 1.4,
+                '251-1000': 1.6,
+                'over_1000': 2
+            },
+            industry: {
+                'technology': 1.8,
+                'healthcare': 2,
+                'ecommerce': 1.2,
+                'financial_services': 1.6,
+                'marketing_advertising': 1.4,
+                'education': 0.8
+            },
+            // dataType is commented out as it has no coefficients yet
+        };
+
+        // --- GLOBAL FUNCTION: handleStartAnalysisClick ---
+        // This function needs to be global so onclick attribute can find it.
         function handleStartAnalysisClick() {
-            console.log("Start Analysis button clicked. Attempting transition to form."); // Debug Log
+            console.log("Start Analysis button clicked (via onclick). Attempting transition to form.");
             try {
-                const formIntro = document.querySelector('.form-intro');
-                const regulationFormContainer = document.getElementById('regulationFormContainer');
-                const formSteps = document.querySelectorAll('.form-step'); // Need to define this here too for showStep
-
-                if (formIntro && regulationFormContainer && formSteps.length > 0) {
-                    formIntro.style.display = 'none'; // Hide the intro section
-                    regulationFormContainer.style.display = 'block'; // Show the form container
-                    showStep(0); // Show the very first step of the form (Step 1 - Industry)
+                // Ensure DOM elements are available. This part requires elements to be selected inside DOMContentLoaded first.
+                // We'll trust that DOMContentLoaded will set these variables up correctly.
+                if (formIntro && regulationFormContainer && formSteps && formSteps.length > 0) {
+                    formIntro.style.display = 'none';
+                    regulationFormContainer.style.display = 'block';
+                    showStep(0); // Assuming showStep is also properly defined and accessible
                     console.log("Transition to form completed.");
                 } else {
-                    console.error("Critical: DOM elements not found for Start Analysis button's action.");
+                    console.error("Critical: DOM elements not fully initialized for handleStartAnalysisClick. Retrying initialization.");
+                    // Attempt a delayed re-initialization if elements aren't ready
+                    setTimeout(initApp, 100); // Try to re-run initApp shortly
                 }
             } catch (e) {
                 console.error("Error in handleStartAnalysisClick:", e);
@@ -310,299 +516,45 @@
         }
 
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM fully loaded and parsed. Initializing app. (Inside DOMContentLoaded)"); // Debug: DOM loaded
-
-            // --- Configuration: Your Zapier Webhook URL ---
-            const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/21168350/u2yjtw7/'; // Your specific Zapier Webhook URL
+        // --- MAIN APP INITIALIZATION FUNCTION ---
+        // This function will be called on DOMContentLoaded or as a fallback
+        function initApp() {
+            console.log("Attempting initApp execution."); // Debug: initApp called
 
             try {
-                // DOM Elements
-                const formIntro = document.querySelector('.form-intro');
-                const regulationFormContainer = document.getElementById('regulationFormContainer');
-                const startAnalysisButton = document.getElementById('startAnalysisButton');
-                const formSteps = document.querySelectorAll('.form-step');
-                const resultsSection = document.getElementById('results-section');
-                const reportBusinessNameSpan = document.getElementById('reportBusinessName');
-                const reportEmailAddressStrong = document.getElementById('reportEmailAddress');
-                const regulationsOutput = document.getElementById('regulationsOutput');
-                const emailReportLink = document.getElementById('emailReportLink');
-                const startOverButton = document.getElementById('startOverButton');
-                const generateReportButton = document.getElementById('generateReportButton');
-                const nextStepsButtonInResults = resultsSection.querySelector('.next-steps-section .action-button'); // Selecting the link
+                // DOM Elements - Re-select to ensure they are current/found
+                formIntro = document.querySelector('.form-intro');
+                regulationFormContainer = document.getElementById('regulationFormContainer');
+                startAnalysisButton = document.getElementById('startAnalysisButton');
+                formSteps = document.querySelectorAll('.form-step');
+                resultsSection = document.getElementById('results-section');
+                reportBusinessNameSpan = document.getElementById('reportBusinessName');
+                reportEmailAddressStrong = document.getElementById('reportEmailAddress');
+                regulationsOutput = document.getElementById('regulationsOutput');
+                emailReportLink = document.getElementById('emailReportLink');
+                startOverButton = document.getElementById('startOverButton');
+                generateReportButton = document.getElementById('generateReportButton');
+                nextStepsButtonInResults = resultsSection.querySelector('.next-steps-section .action-button');
 
-                // Ensure all critical elements are found immediately
-                if (!formIntro || !regulationFormContainer || formSteps.length === 0 || !startAnalysisButton || !resultsSection || !generateReportButton) {
-                    console.error("FATAL ERROR: One or more critical DOM elements could not be found on DOMContentLoaded.");
-                    console.error("formIntro:", formIntro, "regulationFormContainer:", regulationFormContainer, "formSteps.length:", formSteps.length, "startAnalysisButton:", startAnalysisButton, "resultsSection:", resultsSection, "generateReportButton:", generateReportButton);
-                    alert("App failed to initialize. Please contact support and mention console errors.");
+                totalSteps = formSteps.length; // Update totalSteps after selecting formSteps
+
+                // Basic check if critical elements are now found
+                if (!formIntro || !regulationFormContainer || totalSteps === 0 || !startAnalysisButton || !resultsSection || !generateReportButton) {
+                    console.error("FATAL ERROR: One or more critical DOM elements could not be found during initApp.");
+                    console.error("formIntro:", formIntro, "regulationFormContainer:", regulationFormContainer, "totalSteps:", totalSteps, "startAnalysisButton:", startAnalysisButton, "resultsSection:", resultsSection, "generateReportButton:", generateReportButton);
+                    // Alert only if not already alerted to avoid spam
+                    if (!window._appInitFailedAlerted) {
+                        alert("App failed to fully initialize. Please contact support and mention console errors.");
+                        window._appInitFailedAlerted = true; // Set flag to prevent multiple alerts
+                    }
                     return; // Stop further execution if critical elements are missing
                 }
-                console.log("All critical DOM elements found."); // Debug Log
+                console.log("All critical DOM elements found in initApp."); // Debug Log
 
+                // --- Attach Event Listeners (now that elements are guaranteed to be found) ---
+                // startAnalysisButton.addEventListener('click', handleStartAnalysisClick); // Removed redundant addEventListener
+                // onclick on HTML handles this directly.
 
-                let currentStep = 0;
-                const totalSteps = formSteps.length;
-
-                // --- Regulatory Data Definition (with Base Scores and Priority) ---
-                const regulationsData = [
-                    {
-                        name: "GDPR (General Data Protection Regulation)",
-                        description: "A comprehensive data privacy law protecting individuals within the European Union and European Economic Area. It applies to any organization, regardless of its location, that processes personal data of EU residents.",
-                        conditions: {
-                            customerLocation: ['european_union'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 100,
-                        priority: 1
-                    },
-                    {
-                        name: "UK GDPR (General Data Protection Regulation)",
-                        description: "A comprehensive data privacy law protecting individuals within the United Kingdom. It applies to any organization in or targeting individuals in the UK.",
-                        conditions: {
-                            customerLocation: ['united_kingdom'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 100,
-                        priority: 3
-                    },
-                    {
-                        name: "ePrivacy Directive",
-                        description: "ePrivacy refers to a set of laws and regulations, most notably the ePrivacy Directive in the EU, that aim to protect the privacy of electronic communications and user data online, particularly concerning cookies, direct marketing, and confidentiality of communications. It applies to any organization, regardless of its location, that processes personal data of EU residents.",
-                        conditions: {
-                            customerLocation: ['european_union'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 42,
-                        priority: 4
-                    },
-                    {
-                        name: "Privacy & Electronic Communications Regulations (PECR)",
-                        description: "The UK's national implementation of the original EU ePrivacy Directive. ePrivacy refers to a set of laws and regulations, that aim to protect the privacy of electronic communications and user data online, particularly concerning cookies, direct marketing, and confidentiality of communications. It applies to any organization, regardless of its location, that processes personal data of UK residents.",
-                        conditions: {
-                            customerLocation: ['united_kingdom'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 42,
-                        priority: 5
-                    },
-                    {
-                        name: "Data Protection Act of 2018",
-                        description: "A regulation that complements the UK GDPR and grants individuals rights regarding their personal data. It applies to any organization in or targeting individuals in the UK.",
-                        conditions: {
-                            customerLocation: ['united_kingdom'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 49,
-                        priority: 6
-                    },
-                    {
-                        name: "CCPA (California Consumer Privacy Act)",
-                        description: "The California Consumer Privacy Act grants California consumers specific rights regarding their personal information collected by businesses, including the right to know, delete, and opt-out of the sale of their data. For businesses that meet specific thresholds (e.g., revenue, data processing volume).",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            annualRevenue: ['1M+', '750k-999k', '500k-749k', '250k-499k', '1-249k'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 56,
-                        priority: 7
-                    },
-                    {
-                        name: "CAN-SPAM",
-                        description: "The Controlling the Assault of Non-Solicited Pornography And Marketing Act of 2003 establishes national standards for the sending of commercial emails, primarily requiring accurate sender information, clear identification of advertisements, and an easy opt-out mechanism.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 20,
-                        priority: 8
-                    },
-                    {
-                        name: "VPPA (Video Privacy Protection Act)",
-                        description: "The Video Privacy Protection Act prohibits video tape service providers from knowingly disclosing personally identifiable information about a consumer's video rentals without their informed, written consent.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 12,
-                        priority: 9
-                    },
-                    {
-                        name: "HIPAA (Health Insurance Portability and Accountability Act)",
-                        description: "A U.S. law protecting sensitive patient health information from being disclosed without the patient's consent or knowledge. Applies primarily to healthcare providers, health plans, and healthcare clearinghouses.",
-                        conditions: {
-                            industry: ['healthcare'],
-                            customerLocation: ['united_states'],
-                            dataType: ['health_phi']
-                        },
-                        baseScore: 64,
-                        priority: 10
-                    },
-                    {
-                        name: "CIPA (Children's Internet Protection Act)",
-                        description: "The Children's Internet Protection Act requires schools and libraries that receive federal funding for internet access to implement internet safety policies, including technology protection measures to block or filter obscene or harmful content for minors.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            industry: ['education']
-                        },
-                        baseScore: 6,
-                        priority: 11
-                    },
-                    {
-                        name: "TCPA (Telephone Consumer Protection Act)",
-                        description: "The Telephone Consumer Protection Act restricts telemarketing calls, automatic telephone dialing systems, and artificial or prerecorded voice messages, requiring prior consent for many types of calls and texts.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['basic_contact', 'health_phi', 'genetics', 'financial', 'biometrics', 'under_16', 'racial_ethnic', 'political_opinion', 'religious_philosophical', 'sex_life_orientation']
-                        },
-                        baseScore: 56,
-                        priority: 12
-                    },
-                    {
-                        name: "GLBA (Gramm-Leach-Bliley Act)",
-                        description: "The Gramm-Leach-Bliley Act requires financial institutions to explain their information-sharing practices to customers and to safeguard sensitive data, covering privacy, security, and pretexting rules.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['financial']
-                        },
-                        baseScore: 25,
-                        priority: 13
-                    },
-                    {
-                        name: "COPPA (Children's Online Privacy Protection Act)",
-                        description: "The Children's Online Privacy Protection Act imposes requirements on operators of websites or online services directed at children under 13, or that knowingly collect personal information from children under 13, to obtain verifiable parental consent.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['under_16']
-                        },
-                        baseScore: 81,
-                        priority: 14
-                    },
-                    {
-                        name: "BIPA (Illinois Biometric Information Privacy Act)",
-                        description: "The Illinois Biometric Information Privacy Act requires private entities to obtain written consent before collecting, capturing, purchasing, receiving, or otherwise obtaining a person's biometric identifiers or biometric information, and places restrictions on the storage, use, and disclosure of such data.",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            customerType: ['consumers', 'businesses', 'both'],
-                            dataType: ['biometrics']
-                        },
-                        baseScore: 81,
-                        priority: 15
-                    },
-                    {
-                        name: "Federal Trade Commission (FTC)",
-                        description: "The FTC serves as the primary federal agency protecting consumer privacy in the United States by prohibiting unfair or deceptive acts and practices, especially concerning how companies collect, use, and secure personal data across various industries (excluding certain regulated sectors).",
-                        conditions: {
-                            customerLocation: ['united_states']
-                        },
-                        baseScore: 30,
-                        priority: 16
-                    },
-                    {
-                        name: "Federal Communications Commission (FCC)",
-                        description: "The FCC primarily focuses on protecting consumer privacy within the telecommunications sector, setting rules for how phone companies, internet service providers, and other communication service providers handle sensitive customer data like Customer Proprietary Network Information (CPNI).",
-                        conditions: {
-                            customerLocation: ['united_states'],
-                            industry: ['technology', 'healthcare', 'ecommerce', 'financial_services', 'marketing_advertising', 'education', 'other_industry']
-                        },
-                        baseScore: 28,
-                        priority: 17
-                    }
-                ];
-
-                // --- Coefficients Data ---
-                const coefficientsData = {
-                    companySize: {
-                        '51-250': 1.4,
-                        '251-1000': 1.6,
-                        'over_1000': 2
-                    },
-                    industry: {
-                        'technology': 1.8,
-                        'healthcare': 2,
-                        'ecommerce': 1.2,
-                        'financial_services': 1.6,
-                        'marketing_advertising': 1.4,
-                        'education': 0.8
-                    },
-                    // dataType is commented out as it has no coefficients yet
-                };
-
-                // --- Step Navigation Functions ---
-                function showStep(stepIndex) {
-                    formSteps.forEach((step, index) => {
-                        if (index === stepIndex) {
-                            step.classList.add('active');
-                        } else {
-                            step.classList.remove('active');
-                        }
-                    });
-                    currentStep = stepIndex;
-                }
-
-                // Function to validate the current step's inputs
-                function validateStep(stepIndex) {
-                    let isValid = true;
-                    const currentStepElement = formSteps[stepIndex];
-
-                    // 1. Validate text/email/select inputs with 'required' attribute
-                    const requiredInputs = currentStepElement.querySelectorAll('input[required]:not([type="radio"]):not([type="checkbox"]), select[required], textarea[required]');
-                    requiredInputs.forEach(input => {
-                        if (!input.value.trim()) {
-                            input.style.borderColor = 'red';
-                            isValid = false;
-                        } else {
-                            input.style.borderColor = '#ddd';
-                        }
-                    });
-
-                    // 2. Validate Radio button groups
-                    const radioGroups = currentStepElement.querySelectorAll('.radio-group[data-group-name]');
-                    radioGroups.forEach(group => {
-                        const groupName = group.dataset.groupName;
-                        const radiosInGroup = currentStepElement.querySelectorAll(`input[name="${groupName}"]`);
-                        const isChecked = Array.from(radiosInGroup).some(radio => radio.checked);
-
-                        if (!isChecked) {
-                            group.classList.add('invalid-group-border');
-                            isValid = false;
-                        } else {
-                            group.classList.remove('invalid-group-border');
-                        }
-                    });
-
-                    // 3. Validate Checkbox groups
-                    const checkboxGroups = currentStepElement.querySelectorAll('.checkbox-group[data-group-name]');
-                    checkboxGroups.forEach(group => {
-                        const groupName = group.dataset.groupName;
-                        const checkboxesInGroup = currentStepElement.querySelectorAll(`input[name="${groupName}"]`);
-                        const isChecked = Array.from(checkboxesInGroup).some(checkbox => checkbox.checked);
-
-                        if (!isChecked) {
-                            group.classList.add('invalid-group-border');
-                            isValid = false;
-                        } else {
-                            group.classList.remove('invalid-group-border');
-                        }
-                    });
-
-                    return isValid;
-                }
-
-                // --- Event Listeners ---
-
-                // 2. "Next" Buttons
                 document.getElementById('nextStep1').addEventListener('click', function() {
                     if (validateStep(0)) { showStep(1); } else { alert('Please complete all required fields in this section to proceed.'); }
                 });
@@ -616,174 +568,42 @@
                     if (validateStep(3)) { showStep(4); } else { alert('Please complete all required fields in this section to proceed.'); }
                 });
 
-                // 3. "Previous" Buttons
                 document.getElementById('prevStep2').addEventListener('click', function() { showStep(0); });
                 document.getElementById('prevStep3').addEventListener('click', function() { showStep(1); });
                 document.getElementById('prevStep4').addEventListener('click', function() { showStep(2); });
                 document.getElementById('prevStep5').addEventListener('click', function() { showStep(3); });
 
-
-                // --- Generate Report Function ---
-                let finalApplicableRegulations = []; // Holds regulations with calculated scores for this report
-
-                function generateReport(formData) {
-                    let reportHtml = '';
-                    finalApplicableRegulations = []; // Reset for each new report
-
-                    // Calculate overallCoefficient based on user's selected answers
-                    let overallCoefficient = 1;
-                    for (const category in coefficientsData) {
-                        if (Object.hasOwnProperty.call(coefficientsData, category)) {
-                            const userSelection = formData[category];
-
-                            if (userSelection) { // Only process if user actually selected something for this category
-                                if (Array.isArray(userSelection)) { // For multi-select checkboxes (e.g., customerLocation, dataType)
-                                    // For the user's specific input, we still multiply all SELECTED coefficients
-                                    userSelection.forEach(selectedVal => {
-                                        if (coefficientsData[category][selectedVal]) {
-                                            overallCoefficient *= coefficientsData[category][selectedVal];
-                                        }
-                                    });
-                                } else { // For single-select radios (e.g., industry, companySize, annualRevenue, customerType)
-                                    if (coefficientsData[category][userSelection]) {
-                                        overallCoefficient *= coefficientsData[category][userSelection];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    console.log("User's Overall Coefficient:", overallCoefficient); // For debugging
-
-
-                    // Determine applicable regulations and calculate their scores
-                    regulationsData.forEach(regulation => {
-                        let applies = true; // Assume it applies until a condition fails
-
-                        // Check each condition for the current regulation
-                        for (const conditionKey in regulation.conditions) {
-                            const requiredValues = regulation.conditions[conditionKey];
-                            const userValues = formData[conditionKey];
-
-                            // CRITICAL LOGGING FOR DEBUGGING
-                            console.log(`\nRegulation: ${regulation.name}`);
-                            console.log(`  Checking condition: ${conditionKey}`);
-                            console.log(`    Required values for this condition:`, requiredValues);
-                            console.log(`    User's input for this condition:`, userValues);
-
-                            // Condition: User input is missing or empty for a required condition
-                            if (userValues === null || userValues === undefined || (Array.isArray(userValues) && userValues.length === 0) || (typeof userValues === 'string' && userValues.trim() === '')) {
-                                console.log(`    FAIL: User input for required condition '${conditionKey}' is missing or empty.`);
-                                applies = false;
-                                break;
-                            }
-
-                            // Condition: Check if user's selection matches required values
-                            if (Array.isArray(userValues)) { // User input is an array (checkboxes, e.g., customerLocation, dataType)
-                                // For multi-selects, check if AT LEAST ONE required value is present in user's selection
-                                const hasIntersection = requiredValues.some(reqVal => userValues.includes(reqVal));
-                                if (!hasIntersection) {
-                                    console.log(`    FAIL: No overlap found between user's selected '${conditionKey}' and required values.`);
-                                    applies = false;
-                                    break;
-                                } else {
-                                    console.log(`    PASS: Overlap found for '${conditionKey}'.`);
-                                }
-                            } else { // User input is a single value (radio, select, text, e.g., industry, companySize, customerType, annualRevenue)
-                                // For single-selects, check if the user's selected value is among the required values
-                                if (!requiredValues.includes(userValues)) {
-                                    console.log(`    FAIL: User's selected '${conditionKey}' ('${userValues}') is not among required values:`, requiredValues);
-                                    applies = false;
-                                    break;
-                                } else {
-                                    console.log(`    PASS: User's selected '${conditionKey}' ('${userValues}') is among required values.`);
-                                }
-                            }
-                        } // End for (conditionKey in regulation.conditions)
-
-                        if (applies) {
-                            console.log(`=> Regulation APPLIES: ${regulation.name}`);
-                            const calculatedRiskScore = (regulation.baseScore * overallCoefficient).toFixed(0);
-
-                            finalApplicableRegulations.push({
-                                ...regulation,
-                                calculatedRiskScore: parseInt(calculatedRiskScore)
-                            });
-                        } else {
-                            console.log(`=> Regulation DOES NOT APPLY: ${regulation.name}`);
-                        }
-                    }); // End regulationsData.forEach
-
-                    // Sort applicable regulations by priority
-                    finalApplicableRegulations.sort((a, b) => a.priority - b.priority);
-
-                    if (finalApplicableRegulations.length > 0) {
-                        reportHtml += ''; // Removed the intro text here
-                        finalApplicableRegulations.forEach(reg => {
-                            let scoreClass = '';
-                            if (reg.calculatedRiskScore <= 25) {
-                                scoreClass = 'risk-low';
-                            } else if (reg.calculatedRiskScore <= 50) {
-                                scoreClass = 'risk-medium';
-                            } else {
-                                scoreClass = 'risk-high';
-                            }
-
-                            reportHtml += `
-                                <div class="regulation-item">
-                                    <h3>${reg.name}</h3>
-                                    <p>${reg.description}</p>
-                                    <p><strong>Your estimated risk score (out of 100):</strong> <span class="risk-score-value ${scoreClass}">${reg.calculatedRiskScore}</span></p>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        reportHtml = '<p>Based on your input, we did not find any specific regulations from our current list that explicitly apply. Please remember this tool provides informational guidance only and is not legal advice. Always consult with a legal professional for comprehensive compliance advice.</p>';
-                    }
-
-                    return reportHtml;
-                }
-
-                // --- Form Submission (Generate Report Button) ---
                 generateReportButton.addEventListener('click', async function(event) {
-                    console.log("Generate Report button clicked."); // Debug Log
+                    console.log("Generate Report button clicked.");
 
                     if (!validateStep(totalSteps - 1)) {
                         alert('Please complete all required fields to generate the report.');
                         return;
                     }
 
-                    // Collect all form data manually
                     const formData = {
                         industry: document.querySelector('input[name="industry"]:checked')?.value || '',
                         companySize: document.querySelector('input[name="companySize"]:checked')?.value || '',
                         annualRevenue: document.querySelector('input[name="annualRevenue"]:checked')?.value || '',
                         customerLocation: Array.from(document.querySelectorAll('input[name="customerLocation"]:checked')).map(cb => cb.value),
                         customerType: document.querySelector('input[name="customerType"]:checked')?.value || '',
-                        dataType: Array.from(document.querySelectorAll('input[name="dataType']:checked')).map(cb => cb.value),
+                        dataType: Array.from(document.querySelectorAll('input[name="dataType"]:checked')).map(cb => cb.value),
                         fullName: document.getElementById('fullName').value.trim(),
                         businessName: document.getElementById('businessName').value.trim(),
                         yourEmail: document.getElementById('yourEmail').value.trim()
                     };
-                    console.log("Collected formData:", formData); // Debug Log
+                    console.log("Collected formData:", formData);
 
-
-                    // --- Generate Report ---
                     const reportContentHtml = generateReport(formData);
                     regulationsOutput.innerHTML = reportContentHtml;
 
-                    // Update results section with user's business name and email
                     reportBusinessNameSpan.textContent = formData.businessName;
                     reportEmailAddressStrong.textContent = formData.yourEmail;
 
-                    // Hide the form container and show the results
                     regulationFormContainer.style.display = 'none';
                     resultsSection.style.display = 'block';
-                    console.log("Report displayed on site."); // Debug Log
+                    console.log("Report displayed on site.");
 
-                    // --- Send Data to Zapier Webhook (using URLSearchParams) ---
-                    const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/21168350/u2yjtw7/'; // Your specific Zapier Webhook URL
-
-                    // Prepare data for URL-encoded format
                     const flattenedDataToSend = {
                         timestamp: new Date().toISOString(),
                         industry: formData.industry,
@@ -801,7 +621,7 @@
                             finalApplicableRegulations.map(reg => `${reg.name}: ${reg.description}\nYour estimated risk score (out of 100): ${reg.calculatedRiskScore}`).join('\n\n') :
                             'No specific regulations found based on your input.'
                     };
-                    console.log("Data prepared for Zapier (URL-encoded):", flattenedDataToSend); // Debug Log
+                    console.log("Data prepared for Zapier (URL-encoded):", flattenedDataToSend);
 
                     try {
                         const response = await fetch(ZAPIER_WEBHOOK_URL, {
@@ -813,15 +633,14 @@
                         });
 
                         if (response.ok) {
-                            console.log('Data successfully sent to Zapier (URL-encoded)! Response OK.'); // Debug Log
+                            console.log('Data successfully sent to Zapier (URL-encoded)! Response OK.');
                         } else {
-                            console.error('Failed to send data to Zapier:', response.status, response.statusText); // Debug Log
+                            console.error('Failed to send data to Zapier:', response.status, response.statusText);
                         }
                     } catch (error) {
-                        console.error('Error sending data to Zapier:', error); // Debug Log
+                        console.error('Error sending data to Zapier:', error);
                     }
 
-                    // --- Mailto Link for User's Copy ---
                     const reportPlainTextEmail = `
 Dear ${formData.fullName || formData.businessName},
 
@@ -833,4 +652,88 @@ Industry: ${formData.industry}
 Company Size: ${formData.companySize}
 Annual Revenue: ${formData.annualRevenue}
 Customer Locations: ${formData.customerLocation.length > 0 ? formData.customerLocation.join(', ') : 'N/A'}
-Customer
+Customer Type: ${formData.customerType}
+Data Types Collected: ${formData.dataType.length > 0 ? formData.dataType.join(', ') : 'N/A'}
+
+--- Applicable Regulations ---
+
+${finalApplicableRegulations.length > 0 ? finalApplicableRegulations.map(reg => `${reg.name}: ${reg.description}\nYour estimated risk score (out of 100): ${reg.calculatedRiskScore}`).join('\n\n') : 'No specific regulations found based on your input.'}
+
+---
+
+Disclaimer: This is not legal advice. The results are for informational purposes only. By using this tool, you agree that we may contact you to discuss your results and our services.
+
+Best regards,
+[Your Business Name/Signature]
+                `.trim();
+
+                    const emailSubject = encodeURIComponent(`Your Business Regulation Report for ${formData.businessName}`);
+                    const emailBody = encodeURIComponent(reportPlainTextEmail);
+
+                    emailReportLink.href = `mailto:${formData.yourEmail}?subject=${emailSubject}&body=${emailBody}`;
+                    emailReportLink.style.display = 'block';
+                    console.log("Mailto link prepared.");
+                });
+
+                startOverButton.addEventListener('click', function() {
+                    console.log("Start Over button clicked. Resetting form.");
+                    resultsSection.style.display = 'none';
+                    formIntro.style.display = 'block';
+
+                    document.getElementById('fullName').value = '';
+                    document.getElementById('businessName').value = '';
+                    document.getElementById('yourEmail').value = '';
+                    
+                    document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+                    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+
+                    document.querySelectorAll('.invalid-group-border').forEach(el => el.classList.remove('invalid-group-border'));
+                    document.querySelectorAll('input[type="text"], input[type="email"], select').forEach(input => input.style.borderColor = '#ddd');
+                    regulationsOutput.innerHTML = '';
+
+                    emailReportLink.style.display = 'none';
+                    emailReportLink.href = '#';
+
+                    regulationFormContainer.style.display = 'none';
+                    currentStep = 0;
+                    console.log("Form reset complete.");
+                });
+
+                nextStepsButtonInResults.addEventListener('click', function() {
+                    console.log("Next steps button clicked. Opening contact page.");
+                    window.open('https://www.aetos-data.com/services/p/compliance-snapshot-expert-review', '_blank');
+                });
+
+                // Initial setup: Ensure only the intro is visible at page load
+                formIntro.style.display = 'block';
+                regulationFormContainer.style.display = 'none';
+                resultsSection.style.display = 'none';
+                console.log("Initial display states set."); // Debug Log
+
+            } catch (e) {
+                console.error("An error occurred during app initialization (initApp function):", e);
+                // No alert here, rely on initApp's own alerting and console for initial setup issues
+            }
+        }
+
+
+        // --- MAIN ENTRY POINT ---
+        // Try DOMContentLoaded first, which is standard.
+        // If that fails due to external scripts, the onclick attribute will act as a fallback,
+        // calling handleStartAnalysisClick which has its own robust element checks.
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Fallback for very unusual scenarios where DOMContentLoaded might not be enough
+        // This will attempt to initialize the app even after everything on the page is loaded.
+        window.onload = function() {
+            console.log("Window fully loaded. Checking if app initialized.");
+            if (!formIntro || !formIntro.style || formIntro.style.display !== 'block') { // Check if initApp failed to set initial state
+                console.warn("App's initial state not set, attempting re-initialization via window.onload.");
+                initApp();
+            }
+        };
+
+    </script>
+
+</body>
+</html>
